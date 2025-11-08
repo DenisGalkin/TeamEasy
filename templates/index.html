@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h1>Добро пожаловать в TeamEasy!</h1>
+    <p>Платформа для организации работы над проектами и поиска команды</p>
+    
+    {% if not current_user.is_authenticated %}
+        <div style="margin-top: 2rem;">
+            <a href="{{ url_for('register') }}" class="btn">Зарегистрироваться</a>
+            <a href="{{ url_for('login') }}" class="btn">Войти</a>
+        </div>
+    {% else %}
+        <div style="margin-top: 2rem;">
+            <a href="{{ url_for('create_project') }}" class="btn">Создать проект</a>
+            <a href="{{ url_for('my_projects') }}" class="btn" style="background: #666; margin-left: 10px;">Мои проекты</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>О платформе</h2>
+    <p>TeamEasy помогает вам находить заинтересованных людей для своей команды и присоединяться к интересным проектам</p>
+</div>
+{% endblock %}

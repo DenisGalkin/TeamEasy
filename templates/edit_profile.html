@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>Редактирование профиля</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" name="username" value="{{ current_user.username }}" disabled>
+            <small>Имя пользователя нельзя изменить</small>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="github">Ссылка на GitHub профиль (необязательно):</label>
+            <input type="url" id="github" name="github" value="{{ current_user.github or '' }}" placeholder="https://github.com/username">
+        </div>
+
+        <div class="form-group">
+            <label for="telegram_url">Telegram юзернейм (необязательно):</label>
+            <div class="telegram-input-group">
+                <span class="telegram-prefix">@</span>
+                <input type="text" id="telegram_url" name="telegram_url" value="{{ current_user.telegram or '' }}" placeholder="username" class="telegram-input">
+            </div>
+        </div>
+
+        <button type="submit" class="btn">Сохранить изменения</button>
+        <a href="{{ url_for('profile', username=current_user.username) }}" class="btn" style="background: #666; margin-left: 10px;">Отмена</a>
+    </form>
+</div>
+{% endblock %}

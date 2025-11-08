@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="profile-header">
+        <h2>Профиль пользователя: {{ user.username }}</h2>
+        {% if current_user.is_authenticated and current_user.id == user.id %}
+            <a href="{{ url_for('edit_profile') }}" class="btn">Редактировать профиль</a>
+        {% endif %}
+    </div>
+
+    <div class="profile-info">
+        <div class="form-group">
+            <label>Email:</label>
+            <p>{{ user.email }}</p>
+        </div>
+
+        {% if user.github %}
+        <div class="form-group">
+            <label>GitHub:</label>
+            <p><a href="{{ user.github }}" target="_blank">{{ user.github }}</a></p>
+        </div>
+        {% endif %}
+
+        {% if user.telegram %}
+        <div class="form-group">
+            <label>Telegram:</label>
+            <p><a href="https://t.me/{{ user.telegram }}" target="_blank">@{{ user.telegram }}</a></p>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label>Дата регистрации:</label>
+            <p>{{ user.created_at.strftime('%d.%m.%Y') }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Проекты пользователя ({{ projects|length }})</h3>
+
+    {% if projects %}
+        <div class="projects-grid">
+            {% for project in projects %}
+                <div class="project-card">
+                    <h4>{{ project.name }}</h4>
+                    <p>{{ project.description }}</p>
+                    <div style="margin-top: 1rem;">
+                        {% if project.github_url %}
+                        <p><strong>GitHub:</strong> <a href="{{ project.github_url }}" target="_blank">Ссылка</a></p>
+                        {% endif %}
+                        {% if project.telegram_url %}
+                        <p><strong>Telegram:</strong> <a href="{{ project.telegram_url }}" target="_blank">Ссылка</a></p>
+                        {% endif %}
+                        <p><strong>Создан:</strong> {{ project.created_at.strftime('%d.%m.%Y') }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>У пользователя пока нет публичных проектов.</p>
+    {% endif %}
+</div>
+{% endblock %}

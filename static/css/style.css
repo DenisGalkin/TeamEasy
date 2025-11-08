@@ -1,0 +1,184 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+}
+
+.navbar {
+    background: #333;
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: white;
+    padding: 2rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.btn {
+    background: #333;
+    color: white;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background: #555;
+}
+
+.flash-messages {
+    margin-bottom: 1rem;
+}
+
+.flash-message {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 3px;
+}
+
+.flash-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.project-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-left: 4px solid #333;
+}
+
+.project-card h3,
+.project-card h4 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.telegram-input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.telegram-prefix {
+    background: #f4f4f4;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-right: none;
+    border-radius: 3px 0 0 3px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    min-height: 38px;
+}
+
+.telegram-input {
+    border-radius: 0 3px 3px 0;
+    flex: 1;
+    height: auto;
+    border-left: none;
+}
+
+.form-group small {
+    color: #666;
+    font-size: 12px;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.profile-info {
+    margin-top: 2rem;
+}
+
+.profile-info .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.profile-info label {
+    color: #666;
+    font-size: 14px;
+}
+
+.profile-info p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.profile-info a {
+    color: #333;
+    text-decoration: none;
+}
+
+.profile-info a:hover {
+    text-decoration: underline;
+}
