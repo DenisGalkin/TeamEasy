@@ -10,6 +10,13 @@
     </div>
 
     <div class="profile-info">
+        {% if user.bio %}
+        <div class="form-group">
+            <label>О себе:</label>
+            <p class="bio-text">{{ user.bio }}</p>
+        </div>
+        {% endif %}
+
         <div class="form-group">
             <label>Email:</label>
             <p>{{ user.email }}</p>
@@ -37,9 +44,9 @@
 </div>
 
 <div class="card">
-    <h3>Проекты пользователя ({{ projects|length }})</h3>
+<h3>Проекты пользователя ({{ projects|length }})</h3>
 
-    {% if projects %}
+{% if projects %}
         <div class="projects-grid">
             {% for project in projects %}
                 <div class="project-card">
@@ -49,9 +56,7 @@
                         {% if project.github_url %}
                         <p><strong>GitHub:</strong> <a href="{{ project.github_url }}" target="_blank">Ссылка</a></p>
                         {% endif %}
-                        {% if project.telegram_url %}
-                        <p><strong>Telegram:</strong> <a href="{{ project.telegram_url }}" target="_blank">Ссылка</a></p>
-                        {% endif %}
+                        <p><strong>Категория:</strong> {{ project.category_name }}</p>
                         <p><strong>Создан:</strong> {{ project.created_at.strftime('%d.%m.%Y') }}</p>
                     </div>
                 </div>

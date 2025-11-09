@@ -182,3 +182,17 @@ body {
 .profile-info a:hover {
     text-decoration: underline;
 }
+.bio-text {
+    white-space: pre-line;
+    background: #f9f9f9;
+    padding: 1rem;
+    border-radius: 5px;
+    border-left: 4px solid #333;
+    line-height: 1.6;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: Arial, sans-serif;
+}

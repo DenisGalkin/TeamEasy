@@ -14,9 +14,7 @@
                         {% if project.github_url %}
                         <p><strong>GitHub:</strong> <a href="{{ project.github_url }}" target="_blank">Ссылка</a></p>
                         {% endif %}
-                        {% if project.telegram_url %}
-                        <p><strong>Telegram:</strong> <a href="https://t.me/{{ project.telegram_url }}" target="_blank">@{{ project.telegram_url }}</a></p>
-                        {% endif %}
+                        <strong>Категория:</strong> {{ project.category_name }}
                         <p><strong>Видимость:</strong> {{ "Публичный" if project.is_public else "Приватный" }}</p>
                         <p><strong>Создан:</strong> {{ project.created_at.strftime('%d.%m.%Y') }}</p>
                     </div>

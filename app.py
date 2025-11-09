@@ -1,11 +1,11 @@
 # **************TeamEasy**************
 # By Denis Galkin
-# V1.0 - BETA 1
+# V1.0 - BETA 2
 # ************************************
 
 # Englis / Russian
 
-# Library imports / Импорты библиотек
+# Imports of libraries / Импорты библиотек
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, Project, login_manager
@@ -19,7 +19,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Войдите в аккаунт для доступа к этой странице'
+login_manager.login_message_category = 'error'
 
+# Matching category names / Сопоставление названий категорий
+CATEGORIES = {
+    "software-development": "Разработка программного обеспечения",
+    "web-development": "Веб-разработка",
+    "mobile-apps": "Мобильные приложения",
+    "game-development": "Игровая разработка",
+    "blockchain-cryptocurrency": "Блокчейн и криптовалюты",
+    "artificial-intelligence": "Искусственный интеллект",
+    "internet-of-things": "Интернет вещей",
+    "cybersecurity": "Кибербезопасность",
+    "data-analytics": "Аналитика данных",
+    "cloud-technologies": "Облачные технологии",
+    "other": "Другое"
+}
 
 # Index page / Главная страница
 @app.route('/')
@@ -38,18 +54,17 @@ def register():
         email = request.form['email']
         password = request.form['password']
         github = request.form.get('github', '')
-        telegram = request.form.get('telegram_url', '')
+        telegram = request.form.get('telegram', '')
 
-        # Removing @ / Удаление @
         if telegram and telegram.startswith('@'):
             telegram = telegram[1:]
 
         if User.query.filter_by(username=username).first():
-            flash('Имя пользователя уже занято')
+            flash('Имя пользователя уже занято', category='error')
             return redirect(url_for('register'))
 
         if User.query.filter_by(email=email).first():
-            flash('Эта почта уже привязана к другому аккаунту')
+            flash('Эта почта уже привязана к другому аккаунту', category='error')
             return redirect(url_for('register'))
 
         user = User(username=username, email=email, github=github, telegram=telegram)
@@ -57,7 +72,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash('Успешная регистрация')
+        flash('Успешная регистрация', 'success')
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -79,7 +94,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page or url_for('index'))
         else:
-            flash('Неверное имя пользователя или пароль')
+            flash('Неверное имя пользователя или пароль', 'error')
 
     return render_template('login.html')
 
@@ -89,6 +104,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    flash('Вы успешно вышли из аккаунта', 'success')
     return redirect(url_for('index'))
 
 
@@ -97,6 +113,9 @@ def logout():
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
     user_projects = Project.query.filter_by(owner_id=user.id, is_public=True).order_by(Project.created_at.desc()).all()
+    for project in user_projects:
+        project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
+
     return render_template('profile.html', user=user, projects=user_projects)
 
 
@@ -107,9 +126,9 @@ def edit_profile():
     if request.method == 'POST':
         current_user.email = request.form['email']
         current_user.github = request.form.get('github', '')
-        telegram = request.form.get('telegram_url', '')
+        current_user.bio = request.form.get('bio', '')
+        telegram = request.form.get('telegram', '')
 
-        # Removing @ / Удаление @
         if telegram and telegram.startswith('@'):
             telegram = telegram[1:]
         current_user.telegram = telegram
@@ -140,6 +159,7 @@ def create_project():
         project_name = request.form['project_name']
         project_description = request.form['project_description']
         github_url = request.form.get('github_url', '')
+        category = request.form['category']
         is_public = request.form.get('is_public') == 'true'
 
         project = Project(
@@ -147,6 +167,7 @@ def create_project():
             description=project_description,
             github_url=github_url,
             owner_id=current_user.id,
+            category=category,
             is_public=is_public
         )
 
@@ -175,6 +196,8 @@ def join_project():
 @login_required
 def my_projects():
     user_projects = Project.query.filter_by(owner_id=current_user.id).order_by(Project.created_at.desc()).all()
+    for project in user_projects:
+        project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
     return render_template('my_projects.html', projects=user_projects)
 
 

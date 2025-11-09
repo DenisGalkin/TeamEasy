@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="card">
-    <h2>Регистрация</h2>
+    <h2><div style="text-align: center;">Регистрация</div></h2>
     <form method="POST">
         <div class="form-group">
             <label for="username">Имя пользователя:</label>
@@ -21,10 +21,10 @@
             <input type="url" id="github" name="github" placeholder="https://github.com/username">
         </div>
         <div class="form-group">
-            <label for="telegram_url">Telegram юзернейм (необязательно):</label>
+            <label for="telegram">Telegram юзернейм (необязательно):</label>
             <div class="telegram-input-group">
                 <span class="telegram-prefix">@</span>
-                <input type="text" id="telegram_url" name="telegram_url" placeholder="username" class="telegram-input">
+                <input type="text" id="telegram" name="telegram" placeholder="username" class="telegram-input">
             </div>
         </div>
         <button type="submit" class="btn">Зарегистрироваться</button>

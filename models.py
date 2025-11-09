@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     github = db.Column(db.String(120))
     telegram = db.Column(db.String(33))
+    bio = db.Column(db.String(500))
     password_hash = db.Column(db.String(128))
     projects = db.relationship('Project', backref='owner', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -32,6 +33,7 @@ class Project(db.Model):
     github_url = db.Column(db.String(120), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    category = db.Column(db.String(40), nullable=False)
     is_public = db.Column(db.Boolean, default=True)
 
 @login_manager.user_loader
