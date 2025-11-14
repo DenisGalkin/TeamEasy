@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="profile-header">
+        <h2>{{ project.name }} {{ project.id }} - Рабочее пространство</h2>
+        <div>
+            <a href="{{ url_for('project_members', project_id=project.id) }}" class="btn">Участники</a>
+            {% if project.owner_id == current_user.id %}
+                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn">Настройки</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-info">
+        <div class="form-group">
+            <label>Описание проекта:</label>
+            <p class="bio-text">{{ project.description }}</p>
+        </div>
+
+        {% if project.github_url %}
+        <div class="form-group">
+            <label>GitHub:</label>
+            <p><a href="{{ project.github_url }}" target="_blank">{{ project.github_url }}</a></p>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label>Категория:</label>
+            <p>{{ CATEGORIES.get(project.category, "Неизвестная категория") }}</p>
+        </div>
+
+        <div class="form-group">
+            <label>Видимость:</label>
+            <p>{{ "Публичный" if project.is_public else "Приватный" }}</p>
+        </div>
+
+        <div class="form-group">
+            <label>Дата создания:</label>
+            <p>{{ project.created_at.strftime('%d.%m.%Y') }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Быстрый доступ</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <a href="{{ url_for('project_members', project_id=project.id) }}" class="btn" style="text-align: center;">Участники</a>
+        <a href="#" class="btn" style="text-align: center; background: #666;">Календарь</a>
+        <a href="#" class="btn" style="text-align: center; background: #666;">Задачи</a>
+        {% if project.owner_id == current_user.id %}
+            <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn" style="text-align: center;">Настройки</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

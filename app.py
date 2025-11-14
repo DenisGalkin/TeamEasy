@@ -1,15 +1,14 @@
 # **************TeamEasy**************
 # By Denis Galkin
-# V1.0 - BETA 2
+# V1.0 - BETA 3
 # ************************************
 
-# Englis / Russian
+# English / Russian
 
 # Imports of libraries / Импорты библиотек
 from flask import Flask, render_template, redirect, url_for, request, flash
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Project, login_manager
-import os
+from flask_login import login_user, logout_user, login_required, current_user
+from models import db, User, Project, login_manager, ProjectMember
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -36,6 +35,12 @@ CATEGORIES = {
     "cloud-technologies": "Облачные технологии",
     "other": "Другое"
 }
+
+
+@app.context_processor
+def inject_categories():
+    return dict(CATEGORIES=CATEGORIES)
+
 
 # Index page / Главная страница
 @app.route('/')
@@ -173,6 +178,15 @@ def create_project():
 
         try:
             db.session.add(project)
+            db.session.flush()
+
+            owner_member = ProjectMember(
+                project_id=project.id,
+                user_id=current_user.id,
+                role='Владелец'
+            )
+            db.session.add(owner_member)
+
             db.session.commit()
             flash('Проект успешно создан', 'success')
             return redirect(url_for('my_projects'))
@@ -199,6 +213,134 @@ def my_projects():
     for project in user_projects:
         project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
     return render_template('my_projects.html', projects=user_projects)
+
+
+# Project workspace / Рабочее пространство проекта
+@app.route('/project/<int:project_id>/workspace')
+@login_required
+def project_workspace(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if not is_member and project.owner_id != current_user.id:
+        flash('У вас нет доступа к этому проекту', 'error')
+        return redirect(url_for('my_projects'))
+
+    return render_template('project_workspace.html', project=project)
+
+
+# Project members / Участники проекта
+@app.route('/project/<int:project_id>/members')
+@login_required
+def project_members(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if not is_member and project.owner_id != current_user.id:
+        flash('У вас нет доступа к этому проекту', 'error')
+        return redirect(url_for('my_projects'))
+
+    members = ProjectMember.query.filter_by(project_id=project_id).all()
+
+    return render_template('project_members.html', project=project, members=members)
+
+
+# Edit role / Изменение роли участника
+@app.route('/project/<int:project_id>/members/<int:member_id>/edit_role', methods=['POST'])
+@login_required
+def edit_member_role(project_id, member_id):
+    project = Project.query.get_or_404(project_id)
+
+    if project.owner_id != current_user.id:
+        flash('Только владелец проекта может изменять роли участников', 'error')
+        return redirect(url_for('project_members', project_id=project_id))
+
+    member = ProjectMember.query.get_or_404(member_id)
+    new_role = request.form.get('role', '').strip()
+
+    if new_role:
+        member.role = new_role
+        try:
+            db.session.commit()
+            flash('Роль участника успешно обновлена', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Ошибка при изменении роли: ' + str(e), 'error')
+
+    return redirect(url_for('project_members', project_id=project_id))
+
+
+# Remove member / Удаление участника
+@app.route('/project/<int:project_id>/members/<int:member_id>/remove', methods=['POST'])
+@login_required
+def remove_member(project_id, member_id):
+    project = Project.query.get_or_404(project_id)
+
+    if project.owner_id != current_user.id:
+        flash('Только владелец проекта может удалять участников', 'error')
+        return redirect(url_for('project_members', project_id=project_id))
+
+    member = ProjectMember.query.get_or_404(member_id)
+
+    try:
+        db.session.delete(member)
+        db.session.commit()
+        flash('Участник удален из проекта', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при удалении участника: ' + str(e), 'error')
+
+    return redirect(url_for('project_members', project_id=project_id))
+
+
+# Project settings / Настройки проекта
+@app.route('/project/<int:project_id>/settings', methods=['GET', 'POST'])
+@login_required
+def project_settings(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    if project.owner_id != current_user.id:
+        flash('Только владелец проекта может изменять настройки', 'error')
+        return redirect(url_for('project_workspace', project_id=project_id))
+
+    if request.method == 'POST':
+        project.name = request.form['project_name']
+        project.description = request.form['project_description']
+        project.github_url = request.form.get('github_url', '')
+        project.category = request.form['category']
+        project.is_public = request.form.get('is_public') == 'true'
+
+        try:
+            db.session.commit()
+            flash('Настройки проекта изменены', 'success')
+            return redirect(url_for('project_settings', project_id=project_id))
+        except Exception as e:
+            db.session.rollback()
+            flash('Ошибка при обновлении настроек: ' + str(e), 'error')
+
+    return render_template('project_settings.html', project=project)
+
+
+# Delete project / Удаление проекта
+@app.route('/project/<int:project_id>/delete', methods=['POST'])
+@login_required
+def delete_project(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    if project.owner_id != current_user.id:
+        flash('Только владелец проекта может удалить проект', 'error')
+        return redirect(url_for('project_workspace', project_id=project_id))
+
+    try:
+        ProjectMember.query.filter_by(project_id=project_id).delete()
+        db.session.delete(project)
+        db.session.commit()
+        flash('Проект удален', 'success')
+        return redirect(url_for('my_projects'))
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при удалении проекта: ' + str(e), 'error')
+        return redirect(url_for('project_settings', project_id=project_id))
 
 
 if __name__ == '__main__':
