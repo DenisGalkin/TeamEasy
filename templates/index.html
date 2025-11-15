@@ -1,25 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <h1>Добро пожаловать в TeamEasy!</h1>
-    <p>Платформа для организации работы над проектами и поиска команды</p>
-    
-    {% if not current_user.is_authenticated %}
-        <div style="margin-top: 2rem;">
-            <a href="{{ url_for('register') }}" class="btn">Зарегистрироваться</a>
-            <a href="{{ url_for('login') }}" class="btn">Войти</a>
-        </div>
-    {% else %}
-        <div style="margin-top: 2rem;">
-            <a href="{{ url_for('create_project') }}" class="btn">Создать проект</a>
-            <a href="{{ url_for('my_projects') }}" class="btn">Мои проекты</a>
-        </div>
-    {% endif %}
+<div class="page-header">
+    <h1>Добро пожаловать в TeamEasy</h1>
+    <p>Объединяйтесь в команды и разрабатывайте совместные проекты</p>
 </div>
 
 <div class="card">
-    <h2>О платформе</h2>
-    <p>TeamEasy помогает вам находить заинтересованных людей для своей команды и присоединяться к интересным проектам</p>
+    <div class="card-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+            <div>
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Начните сейчас</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Создайте свой проект или присоединитесь
+                    к существующему</p>
+
+                {% if not current_user.is_authenticated %}
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="{{ url_for('register') }}" class="btn">Начать</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">Узнать больше</a>
+                </div>
+                {% else %}
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="{{ url_for('create_project') }}" class="btn">Создать проект</a>
+                    <a href="{{ url_for('my_projects') }}" class="btn btn-outline">Мои проекты</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Скоро...</h3>
+                <p style="color: var(--text-secondary);">Лента проектов, поиск пользователей и проектов, уведомления</p>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
+
+<div style="margin-top: 3rem;">
+    <h2 style="margin-bottom: 1.5rem; color: var(--text-primary);">Лента проектов</h2>
+
+    <div class="empty-state">
+        <h3>Скоро...</h3>
+    </div>
+    {% endblock %}

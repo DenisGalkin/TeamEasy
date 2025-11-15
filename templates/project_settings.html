@@ -1,57 +1,76 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="profile-header">
-        <h2>Настройки проекта: {{ project.name }}</h2>
+<div class="page-header">
+    <div style="display: flex; justify-content: between; align-items: start;">
         <div>
-            <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn">← Назад к проекту</a>
+            <h1>Настройки проекта</h1>
+            <p>Управляйте настройками вашего проекта</p>
         </div>
+        <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn btn-outline">← Назад</a>
     </div>
+</div>
 
-    <form method="POST">
-        <div class="form-group">
-            <label for="project_name">Название проекта:</label>
-            <input type="text" id="project_name" name="project_name" value="{{ project.name }}" required>
-        </div>
+<div class="card">
+    <div class="card-content">
+        <form method="POST">
+            <div class="grid grid-cols-2" style="gap: 1.5rem;">
+                <div class="form-group">
+                    <label for="project_name">Название проекта</label>
+                    <input type="text" id="project_name" name="project_name" class="form-control"
+                           value="{{ project.name }}" required>
+                </div>
 
-        <div class="form-group">
-            <label for="project_description">Описание проекта:</label>
-            <textarea id="project_description" name="project_description" rows="4" required>{{ project.description }}</textarea>
-        </div>
+                <div class="form-group">
+                    <label for="category">Категория</label>
+                    <select id="category" name="category" class="form-control">
+                        {% for key, value in CATEGORIES.items() %}
+                        <option value="{{ key }}" {% if project.category== key %}selected{% endif %}>
+                            {{ value }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="github_url">GitHub репозиторий:</label>
-            <input type="url" id="github_url" name="github_url" value="{{ project.github_url }}" placeholder="https://github.com/username/repo">
-        </div>
+            <div class="form-group">
+                <label for="project_description">Описание проекта</label>
+                <textarea id="project_description" name="project_description" class="form-control"
+                          rows="4" required>{{ project.description }}</textarea>
+            </div>
 
-        <div class="form-group">
-            <label for="category">Категория проекта:</label>
-            <select id="category" name="category">
-                {% for key, value in CATEGORIES.items() %}
-                    <option value="{{ key }}" {% if project.category == key %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
-        </div>
+            <div class="grid grid-cols-2" style="gap: 1.5rem;">
+                <div class="form-group">
+                    <label for="github_url">GitHub репозиторий</label>
+                    <input type="url" id="github_url" name="github_url" class="form-control"
+                           value="{{ project.github_url }}" placeholder="https://github.com/username/repo">
+                </div>
 
-        <div class="form-group">
-            <label for="is_public">Видимость проекта:</label>
-            <select id="is_public" name="is_public">
-                <option value="true" {% if project.is_public %}selected{% endif %}>Публичный</option>
-                <option value="false" {% if not project.is_public %}selected{% endif %}>Приватный</option>
-            </select>
-        </div>
+                <div class="form-group">
+                    <label for="is_public">Видимость</label>
+                    <select id="is_public" name="is_public" class="form-control">
+                        <option value="true" {% if project.is_public %}selected{% endif %}>Публичный</option>
+                        <option value="false" {% if not project.is_public %}selected{% endif %}>Приватный</option>
+                    </select>
+                </div>
+            </div>
 
-        <button type="submit" class="btn">Сохранить изменения</button>
-    </form>
-
-    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #ddd;">
-        <h3 style="color: #dc3545;">Опасная зона</h3>
-        <p>Удаление проекта невозможно отменить. Все данные проекта будут безвозвратно удалены.</p>
-        <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}" 
-              onsubmit="return confirm('Вы уверены, что хотите удалить проект? Это действие невозможно отменить.')">
-            <button type="submit" class="btn" style="background: #dc3545;">Удалить проект</button>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">Сохранить изменения</button>
+                <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn btn-outline">Отменить</a>
+            </div>
         </form>
+
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+            <h3 style="color: #dc3545; margin-bottom: 1rem;">Опасная зона</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Удаление проекта нельзя отменить
+            </p>
+            <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}"
+                  onsubmit="return confirm('Вы уверены, что хотите удалить проект?')">
+                <button type="submit" class="btn" style="background: #dc3545;">Удалить проект</button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,19 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <h2><div style="text-align: center;">Вход</div></h2>
-    <form method="POST">
-        <div class="form-group">
-            <label for="username">Имя пользователя:</label>
-            <input type="text" id="username" name="username" required>
+<div style="max-width: 400px; margin: 4rem auto; padding: 0 1rem;">
+    <div class="card">
+        <div class="card-content">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="margin-bottom: 0.5rem;">Вход</h1>
+                <p style="color: var(--text-secondary);">Войдите в ваш аккаунт TeamEasy</p>
+            </div>
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" name="username" class="form-control" required
+                           placeholder="Введите имя пользователя">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" class="form-control" required
+                           placeholder="Введите пароль">
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                    Войти
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-secondary);">Нет аккаунта?
+                    <a href="{{ url_for('register') }}"
+                       style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                        Зарегистрируйтесь
+                    </a>
+                </p>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <button type="submit" class="btn">Войти</button>
-    </form>
-    <p style="margin-top: 1rem;">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a></p>
+    </div>
 </div>
 {% endblock %}

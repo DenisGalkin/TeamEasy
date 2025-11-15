@@ -1,38 +1,64 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="profile-header">
-        <h2>Участники проекта: {{ project.name }}</h2>
+<div class="page-header">
+    <div style="display: flex; justify-content: between; align-items: start;">
         <div>
-            <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn">← Назад к проекту</a>
+            <h1>Участники</h1>
+            <p>Управляйте участниками проекта</p>
         </div>
+        <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn btn-outline">← Назад</a>
     </div>
+</div>
 
-    <div class="projects-grid">
-        {% for member in members %}
+<div class="card">
+    <div class="card-content">
+        <div class="grid grid-cols-3">
+            {% for member in members %}
             <div class="project-card">
-                <h4>{{ member.user.username }}</h4>
-                <p><strong>Роль:</strong>
-                    {% if project.owner_id == current_user.id and member.user_id != current_user.id %}
-                        <form method="POST" action="{{ url_for('edit_member_role', project_id=project.id, member_id=member.id) }}" style="display: inline;">
-                            <input type="text" name="role" value="{{ member.role }}" style="padding: 0.25rem; font-size: 14px;">
-                            <button type="submit" style="background: none; border: none; cursor: pointer;">💾</button>
-                        </form>
-                    {% else %}
-                        {{ member.role }}
-                    {% endif %}
-                </p>
-                <p><strong>Присоединился:</strong> {{ member.joined_at.strftime('%d.%m.%Y') }}</p>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); 
+                         color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                        {{ member.user.username[0].upper() }}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0;">{{ member.user.username }}</h4>
+                        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                            {{ member.role }}
+                        </p>
+                    </div>
+                </div>
+
+                <div style="color: var(--text-secondary); font-size: 12px;">
+                    Присоединился {{ member.joined_at.strftime('%d %b %Y') }}
+                </div>
 
                 {% if project.owner_id == current_user.id and member.user_id != current_user.id %}
-                    <form method="POST" action="{{ url_for('remove_member', project_id=project.id, member_id=member.id) }}"
-                          onsubmit="return confirm('Вы уверены, что хотите удалить этого участника?')">
-                        <button type="submit" class="btn" style="background: #dc3545; margin-top: 0.5rem;">Удалить</button>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <form method="POST"
+                          action="{{ url_for('edit_member_role', project_id=project.id, member_id=member.id) }}"
+                          style="flex: 1;">
+                        <input type="text" name="role" value="{{ member.role }}"
+                               style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                        <button type="submit" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; 
+                               background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                            Изменить роль
+                        </button>
                     </form>
+
+                    <form method="POST"
+                          action="{{ url_for('remove_member', project_id=project.id, member_id=member.id) }}"
+                          onsubmit="return confirm('Вы уверены, что хотите удалить этого пользователя?')">
+                        <button type="submit" style="padding: 0.5rem; background: #dc3545; color: white; 
+                               border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                            Удалить
+                        </button>
+                    </form>
+                </div>
                 {% endif %}
             </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

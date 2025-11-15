@@ -7,6 +7,16 @@ from datetime import datetime, timezone, timedelta
 db = SQLAlchemy()
 login_manager = LoginManager()
 
+# Profile photo / Фото профиля
+PROFILE_PHOTO_FOLDER = 'static/uploads/profile_photos'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # User / Пользователь
 class User(UserMixin, db.Model):
@@ -17,6 +27,7 @@ class User(UserMixin, db.Model):
     telegram = db.Column(db.String(33))
     bio = db.Column(db.String(500))
     password_hash = db.Column(db.String(128))
+    profile_photo = db.Column(db.String(255), default='default-avatar.png')
     projects = db.relationship('Project', backref='owner', lazy=True)
     project_memberships = db.relationship('ProjectMember', backref='user', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
@@ -26,6 +37,11 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def get_profile_photo_url(self):
+        if self.profile_photo and self.profile_photo != 'default-avatar.png':
+            return f'/static/uploads/profile_photos/{self.profile_photo}'
+        return '/static/images/default-avatar.png'
 
 
 # Project / Проект

@@ -1,69 +1,101 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="profile-header">
-        <h2>Профиль пользователя: {{ user.username }}</h2>
+<div class="page-header">
+    <div style="display: flex; justify-content: between; align-items: start;">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <div class="profile-photo-container">
+                <img src="{{ user.get_profile_photo_url() }}"
+                     alt="Profile Photo"
+                     class="profile-photo"
+                     style="width: 100px; height: 100px;">
+            </div>
+            <div>
+                <h1>{{ user.username }}</h1>
+                <p>Присоединился {{ user.created_at.strftime('%B %Y') }}</p>
+            </div>
+        </div>
         {% if current_user.is_authenticated and current_user.id == user.id %}
-            <a href="{{ url_for('edit_profile') }}" class="btn">Редактировать профиль</a>
+        <a href="{{ url_for('edit_profile') }}" class="btn">Редактировать профиль</a>
         {% endif %}
-    </div>
-
-    <div class="profile-info">
-        {% if user.bio %}
-        <div class="form-group">
-            <label>О себе:</label>
-            <p class="bio-text">{{ user.bio }}</p>
-        </div>
-        {% endif %}
-
-        <div class="form-group">
-            <label>Email:</label>
-            <p>{{ user.email }}</p>
-        </div>
-
-        {% if user.github %}
-        <div class="form-group">
-            <label>GitHub:</label>
-            <p><a href="{{ user.github }}" target="_blank">{{ user.github }}</a></p>
-        </div>
-        {% endif %}
-
-        {% if user.telegram %}
-        <div class="form-group">
-            <label>Telegram:</label>
-            <p><a href="https://t.me/{{ user.telegram }}" target="_blank">@{{ user.telegram }}</a></p>
-        </div>
-        {% endif %}
-
-        <div class="form-group">
-            <label>Дата регистрации:</label>
-            <p>{{ user.created_at.strftime('%d.%m.%Y') }}</p>
-        </div>
     </div>
 </div>
 
-<div class="card">
-<h3>Проекты пользователя ({{ projects|length }})</h3>
-
-{% if projects %}
-        <div class="projects-grid">
-            {% for project in projects %}
-                <div class="project-card">
-                    <h4>{{ project.name }}</h4>
-                    <p>{{ project.description }}</p>
-                    <div style="margin-top: 1rem;">
-                        {% if project.github_url %}
-                        <p><strong>GitHub:</strong> <a href="{{ project.github_url }}" target="_blank">Ссылка</a></p>
-                        {% endif %}
-                        <p><strong>Категория:</strong> {{ project.category_name }}</p>
-                        <p><strong>Создан:</strong> {{ project.created_at.strftime('%d.%m.%Y') }}</p>
-                    </div>
+<div class="grid grid-cols-3" style="gap: 2rem;">
+    <div class="card">
+        <div class="card-content">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Информация</h3>
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div>
+                    <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.25rem;">Email</label>
+                    <p style="font-weight: 500;">{{ user.email }}</p>
                 </div>
-            {% endfor %}
+
+                {% if user.github %}
+                <div>
+                    <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.25rem;">GitHub</label>
+                    <p style="font-weight: 500;">
+                        <a href="{{ user.github }}" target="_blank"
+                           style="color: var(--primary-color); text-decoration: none;">
+                            {{ user.github }}
+                        </a>
+                    </p>
+                </div>
+                {% endif %}
+
+                {% if user.telegram %}
+                <div>
+                    <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.25rem;">Telegram</label>
+                    <p style="font-weight: 500;">
+                        <a href="https://t.me/{{ user.telegram }}" target="_blank"
+                           style="color: var(--primary-color); text-decoration: none;">
+                            @{{ user.telegram }}
+                        </a>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
         </div>
-    {% else %}
-        <p>У пользователя пока нет публичных проектов.</p>
-    {% endif %}
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-content">
+            {% if user.bio %}
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">О себе</h3>
+                <div style="background: var(--sidebar-bg); padding: 1.5rem; border-radius: 8px; line-height: 1.6;">
+                    {{ user.bio|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div>
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                    Проекты пользователя ({{ projects|length }})
+                </h3>
+
+                {% if projects %}
+                <div class="grid grid-cols-2">
+                    {% for project in projects %}
+                    <div class="project-card">
+                        <h4>{{ project.name }}</h4>
+                        <p>{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+
+                        <div class="project-meta">
+                            <span class="project-category">{{ project.category_name }}</span>
+                            <span class="project-date">{{ project.created_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 2rem;">
+                    <i></i>
+                    <p>Нет публичных проектов</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

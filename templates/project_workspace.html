@@ -1,56 +1,83 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="profile-header">
-        <h2>{{ project.name }} {{ project.id }} - Рабочее пространство</h2>
+<div class="page-header">
+    <div style="display: flex; justify-content: between; align-items: start;">
         <div>
-            <a href="{{ url_for('project_members', project_id=project.id) }}" class="btn">Участники</a>
-            {% if project.owner_id == current_user.id %}
-                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn">Настройки</a>
-            {% endif %}
+            <h1>{{ project.name }}</h1>
+            <p>{{ CATEGORIES.get(project.category) }}</p>
         </div>
-    </div>
-
-    <div class="profile-info">
-        <div class="form-group">
-            <label>Описание проекта:</label>
-            <p class="bio-text">{{ project.description }}</p>
-        </div>
-
-        {% if project.github_url %}
-        <div class="form-group">
-            <label>GitHub:</label>
-            <p><a href="{{ project.github_url }}" target="_blank">{{ project.github_url }}</a></p>
-        </div>
-        {% endif %}
-
-        <div class="form-group">
-            <label>Категория:</label>
-            <p>{{ CATEGORIES.get(project.category, "Неизвестная категория") }}</p>
-        </div>
-
-        <div class="form-group">
-            <label>Видимость:</label>
-            <p>{{ "Публичный" if project.is_public else "Приватный" }}</p>
-        </div>
-
-        <div class="form-group">
-            <label>Дата создания:</label>
-            <p>{{ project.created_at.strftime('%d.%m.%Y') }}</p>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('my_projects') }}" class="btn btn-outline">← Назад</a>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <h3>Быстрый доступ</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-        <a href="{{ url_for('project_members', project_id=project.id) }}" class="btn" style="text-align: center;">Участники</a>
-        <a href="#" class="btn" style="text-align: center; background: #666;">Календарь</a>
-        <a href="#" class="btn" style="text-align: center; background: #666;">Задачи</a>
-        {% if project.owner_id == current_user.id %}
-            <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn" style="text-align: center;">Настройки</a>
-        {% endif %}
+<div class="grid grid-cols-3" style="gap: 2rem;">
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-content">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Главная</h3>
+
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div>
+                    <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Описание</label>
+                    <div style="background: var(--sidebar-bg); padding: 1.5rem; border-radius: 8px; line-height: 1.6;">
+                        {{ project.description|replace('\n', '<br>')|safe }}
+                    </div>
+                </div>
+
+                {% if project.github_url %}
+                <div>
+                    <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">GitHub
+                        репозиторий</label>
+                    <p>
+                        <a href="{{ project.github_url }}" target="_blank"
+                           style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                            {{ project.github_url }}
+                        </a>
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-content">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Меню</h3>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <a href="{{ url_for('project_members', project_id=project.id) }}" class="btn btn-outline"
+                   style="justify-content: start;">
+                    Участники
+                </a>
+                <button class="btn btn-outline" style="justify-content: start; opacity: 0.6;" disabled>
+                    Календарь событий
+                </button>
+                <button class="btn btn-outline" style="justify-content: start; opacity: 0.6;" disabled>
+                    Задачи
+                </button>
+                {% if project.owner_id == current_user.id %}
+                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-outline"
+                   style="justify-content: start;">
+                    Настройки проекта
+                </a>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="font-size: 12px; color: var(--text-secondary);">Видимость</label>
+                        <p style="font-weight: 500;">{{ "Публичный" if project.is_public else "Приватный" }}</p>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; color: var(--text-secondary);">Создан</label>
+                        <p style="font-weight: 500;">{{ project.created_at.strftime('%d %b %Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

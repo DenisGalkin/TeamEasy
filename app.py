@@ -1,19 +1,26 @@
 # **************TeamEasy**************
 # By Denis Galkin
-# V1.0 - BETA 3
+# V1.0 - BETA 4
 # ************************************
 
 # English / Russian
 
 # Imports of libraries / Импорты библиотек
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, Project, login_manager, ProjectMember
+from models import db, User, Project, login_manager, ProjectMember, allowed_file, MAX_FILE_SIZE
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///teameasy.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PROFILE_PHOTO_FOLDER'] = 'static/uploads/profile_photos'
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB
+
+os.makedirs(app.config['PROFILE_PHOTO_FOLDER'], exist_ok=True)
+os.makedirs('static/images', exist_ok=True)
 
 db.init_app(app)
 login_manager.init_app(app)
@@ -40,6 +47,12 @@ CATEGORIES = {
 @app.context_processor
 def inject_categories():
     return dict(CATEGORIES=CATEGORIES)
+
+
+# Files upload folder / Папка загрузки файлов
+@app.route('/static/uploads/profile_photos/<filename>')
+def serve_profile_photo(filename):
+    return send_from_directory(app.config['PROFILE_PHOTO_FOLDER'], filename)
 
 
 # Index page / Главная страница
@@ -138,6 +151,25 @@ def edit_profile():
             telegram = telegram[1:]
         current_user.telegram = telegram
 
+        if 'profile_photo' in request.files:
+            file = request.files['profile_photo']
+            if file and file.filename != '' and allowed_file(file.filename):
+                if file.content_length > MAX_FILE_SIZE:
+                    flash('Файл слишком большой. Максимальный размер - 2MB.', 'error')
+                else:
+                    # Delete old profile photo if it exists and is not default
+                    if current_user.profile_photo and current_user.profile_photo != 'default-avatar.png':
+                        old_photo_path = os.path.join(app.config['PROFILE_PHOTO_FOLDER'], current_user.profile_photo)
+                        if os.path.exists(old_photo_path):
+                            os.remove(old_photo_path)
+
+                    # Save new profile photo
+                    filename = secure_filename(f"{current_user.id}_{file.filename}")
+                    file.save(os.path.join(app.config['PROFILE_PHOTO_FOLDER'], filename))
+                    current_user.profile_photo = filename
+            elif file and file.filename != '':
+                flash('Недопустимый формат файла. Разрешены: PNG, JPG, JPEG, GIF.', 'error')
+
         existing_user = User.query.filter(User.email == current_user.email, User.id != current_user.id).first()
         if existing_user:
             flash('Эта почта уже привязана к другому аккаунту', 'error')
@@ -152,6 +184,24 @@ def edit_profile():
             flash('Ошибка при редактировании профиля: ' + str(e), 'error')
 
     return render_template('edit_profile.html')
+
+
+# Delete profile photo / Удаление фото профиля
+@app.route('/delete_profile_photo', methods=['POST'])
+@login_required
+def delete_profile_photo():
+    if current_user.profile_photo and current_user.profile_photo != 'default-avatar.png':
+        photo_path = os.path.join(app.config['PROFILE_PHOTO_FOLDER'], current_user.profile_photo)
+        if os.path.exists(photo_path):
+            os.remove(photo_path)
+
+        current_user.profile_photo = 'default-avatar.png'
+        db.session.commit()
+        flash('Фото профиля удалено', 'success')
+    else:
+        flash('Нет фото для удаления', 'error')
+
+    return redirect(url_for('edit_profile'))
 
 
 # Create project / Функция создания проекта
@@ -195,14 +245,6 @@ def create_project():
             flash('Ошибка при создании проекта: ' + str(e), 'error')
 
     return render_template('create_project.html')
-
-
-# Join project / Присоединиться к проекту
-@app.route('/join_project')
-def join_project():
-    if not current_user.is_authenticated:
-        return redirect(url_for('login', next=request.url))
-    return render_template('join_project.html')
 
 
 # My projects / Мои проекты

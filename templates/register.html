@@ -1,34 +1,63 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <h2><div style="text-align: center;">Регистрация</div></h2>
-    <form method="POST">
-        <div class="form-group">
-            <label for="username">Имя пользователя:</label>
-            <input type="text" id="username" name="username" required>
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <div class="form-group">
-            <label for="github">Ссылка на GitHub профиль (необязательно):</label>
-            <input type="url" id="github" name="github" placeholder="https://github.com/username">
-        </div>
-        <div class="form-group">
-            <label for="telegram">Telegram юзернейм (необязательно):</label>
-            <div class="telegram-input-group">
-                <span class="telegram-prefix">@</span>
-                <input type="text" id="telegram" name="telegram" placeholder="username" class="telegram-input">
+<div style="max-width: 400px; margin: 4rem auto; padding: 0 1rem;">
+    <div class="card">
+        <div class="card-content">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="margin-bottom: 0.5rem;">Регистрация</h1>
+                <p style="color: var(--text-secondary);">Создайте аккаунт, чтобы начать работу</p>
+            </div>
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" name="username" class="form-control" required
+                           placeholder="Придумайте имя пользователя">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" required
+                           placeholder="Введите вашу почту">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" class="form-control" required
+                           placeholder="Придумайте надежный пароль">
+                </div>
+
+                <div class="form-group">
+                    <label for="github">GitHub профиль (необязательно)</label>
+                    <input type="url" id="github" name="github" class="form-control"
+                           placeholder="https://github.com/username">
+                </div>
+
+                <div class="form-group">
+                    <label for="telegram">Telegram юзернейм (необязательно)</label>
+                    <div style="display: flex;">
+                        <span style="background: var(--sidebar-bg); padding: 0.75rem; border: 1px solid var(--border-color); 
+                              border-right: none; border-radius: 8px 0 0 8px; display: flex; align-items: center; font-size: 14px;">@</span>
+                        <input type="text" id="telegram" name="telegram" class="form-control"
+                               placeholder="username" style="border-radius: 0 8px 8px 0; border-left: none;">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                    Зарегистрироваться
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <p style="color: var(--text-secondary);">Уже есть аккаунт?
+                    <a href="{{ url_for('login') }}"
+                       style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                        Войдите
+                    </a>
+                </p>
             </div>
         </div>
-        <button type="submit" class="btn">Зарегистрироваться</button>
-    </form>
-    <p style="margin-top: 1rem;">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a></p>
+    </div>
 </div>
 {% endblock %}
