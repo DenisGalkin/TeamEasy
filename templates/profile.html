@@ -36,9 +36,7 @@
                     <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.25rem;">GitHub</label>
                     <p style="font-weight: 500;">
                         <a href="{{ user.github }}" target="_blank"
-                           style="color: var(--primary-color); text-decoration: none;">
-                            {{ user.github }}
-                        </a>
+                           style="color: var(--primary-color); text-decoration: none;">{{ user.github }}</a>
                     </p>
                 </div>
                 {% endif %}
@@ -48,12 +46,18 @@
                     <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.25rem;">Telegram</label>
                     <p style="font-weight: 500;">
                         <a href="https://t.me/{{ user.telegram }}" target="_blank"
-                           style="color: var(--primary-color); text-decoration: none;">
-                            @{{ user.telegram }}
-                        </a>
+                           style="color: var(--primary-color); text-decoration: none;">@{{ user.telegram }}</a>
                     </p>
                 </div>
                 {% endif %}
+
+                {% if user.discord %}
+                <div>
+                    <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.25rem;">Discord</label>
+                    <p style="font-weight: 500;">{{ user.discord }}</p>
+                </div>
+                {% endif %}
+
             </div>
         </div>
     </div>
@@ -70,9 +74,8 @@
             {% endif %}
 
             <div>
-                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
-                    Проекты пользователя ({{ projects|length }})
-                </h3>
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Проекты пользователя ({{ projects|length
+                    }})</h3>
 
                 {% if projects %}
                 <div class="grid grid-cols-2">

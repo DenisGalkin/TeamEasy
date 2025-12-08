@@ -15,18 +15,12 @@
     </div>
 
     <div class="nav-links">
-        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
             <span>Главная</span>
         </a>
 
-        <a href="#" class="nav-link">
+        <a href="" class="nav-link">
             <span>Поиск</span>
-        </a>
-
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('create_project') }}"
-           class="nav-link {% if request.endpoint == 'create_project' %}active{% endif %}">
-            <span>Создать проект</span>
         </a>
 
         <a href="{{ url_for('my_projects') }}"
@@ -34,7 +28,12 @@
             <span>Мои проекты</span>
         </a>
 
-        <a href="#" class="nav-link">
+        <a href="{{ url_for('create_project') }}"
+           class="nav-link {% if request.endpoint == 'create_project' %}active{% endif %}">
+            <span>Создать проект</span>
+        </a>
+
+        <a href="" class="nav-link">
             <span>Уведомления</span>
         </a>
 
@@ -42,16 +41,13 @@
            class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
             <span>Профиль</span>
         </a>
-        {% endif %}
     </div>
 
-    {% if current_user.is_authenticated %}
     <div style="padding: 0 1rem; margin-top: auto;">
         <a href="{{ url_for('logout') }}" class="nav-link">
             <span>Выйти</span>
         </a>
     </div>
-    {% endif %}
 </nav>
 
 <main class="main-content">

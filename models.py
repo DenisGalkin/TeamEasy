@@ -25,6 +25,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     github = db.Column(db.String(120))
     telegram = db.Column(db.String(33))
+    discord = db.Column(db.String(32))
     bio = db.Column(db.String(500))
     password_hash = db.Column(db.String(128))
     profile_photo = db.Column(db.String(255), default='default-avatar.png')

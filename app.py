@@ -1,6 +1,6 @@
 # **************TeamEasy**************
 # By Denis Galkin
-# V1.0 - BETA 4
+# V1.0 - BETA 5
 # ************************************
 
 # English / Russian
@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = 'key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///teameasy.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['PROFILE_PHOTO_FOLDER'] = 'static/uploads/profile_photos'
@@ -58,7 +58,16 @@ def serve_profile_photo(filename):
 # Index page / Главная страница
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     return render_template('index.html')
+
+
+# Home page / Домашняя страница
+@app.route('/home')
+@login_required
+def home():
+    return render_template('home.html')
 
 
 # Registration by Flask Login / Регистрация через библиотеку Flask Login
@@ -73,6 +82,7 @@ def register():
         password = request.form['password']
         github = request.form.get('github', '')
         telegram = request.form.get('telegram', '')
+        discord = request.form.get('discord', '')
 
         if telegram and telegram.startswith('@'):
             telegram = telegram[1:]
@@ -85,7 +95,7 @@ def register():
             flash('Эта почта уже привязана к другому аккаунту', category='error')
             return redirect(url_for('register'))
 
-        user = User(username=username, email=email, github=github, telegram=telegram)
+        user = User(username=username, email=email, github=github, telegram=telegram, discord=discord)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()

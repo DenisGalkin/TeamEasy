@@ -48,20 +48,13 @@
 
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <a href="{{ url_for('project_members', project_id=project.id) }}" class="btn btn-outline"
-                   style="justify-content: start;">
-                    Участники
-                </a>
-                <button class="btn btn-outline" style="justify-content: start; opacity: 0.6;" disabled>
-                    Календарь событий
+                   style="justify-content: start;">Участники</a>
+                <button class="btn btn-outline" style="justify-content: start; opacity: 0.6;" disabled>Календарь
                 </button>
-                <button class="btn btn-outline" style="justify-content: start; opacity: 0.6;" disabled>
-                    Задачи
-                </button>
+                <button class="btn btn-outline" style="justify-content: start; opacity: 0.6;" disabled>Задачи</button>
                 {% if project.owner_id == current_user.id %}
                 <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-outline"
-                   style="justify-content: start;">
-                    Настройки проекта
-                </a>
+                   style="justify-content: start;">Настройки проекта</a>
                 {% endif %}
             </div>
 

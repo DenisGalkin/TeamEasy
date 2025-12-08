@@ -8,7 +8,6 @@
 
 <div class="card">
     <div class="card-content">
-        <!-- Profile Photo Section -->
         <div class="profile-photo-section">
             <div class="profile-photo-container">
                 <img src="{{ current_user.get_profile_photo_url() }}"
@@ -29,15 +28,15 @@
             <div class="photo-actions">
                 <form method="POST" action="{{ url_for('delete_profile_photo') }}"
                       onsubmit="return confirm('Вы уверены, что хотите удалить фото профиля?')">
-                    <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 12px;">
-                        Удалить фото
+                    <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 12px;">Удалить
+                        фото
                     </button>
                 </form>
             </div>
             {% endif %}
 
-            <div style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 12px;">
-                Размер - до 2MB • PNG, JPG, JPEG, GIF
+            <div style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 12px;">Размер - до 2MB • PNG, JPG,
+                JPEG, GIF
             </div>
         </div>
 
@@ -50,9 +49,8 @@
                     <label for="username">Имя пользователя</label>
                     <input type="text" id="username" name="username" class="form-control"
                            value="{{ current_user.username }}" disabled>
-                    <small style="color: var(--text-secondary); font-size: 12px; margin-top: 0.25rem; display: block;">
-                        Имя пользователя нельзя изменить
-                    </small>
+                    <small style="color: var(--text-secondary); font-size: 12px; margin-top: 0.25rem; display: block;">Имя
+                        пользователя нельзя изменить</small>
                 </div>
 
                 <div class="form-group">
@@ -73,9 +71,7 @@
                     <label for="telegram">Telegram юзернейм</label>
                     <div style="display: flex;">
                         <span style="background: var(--sidebar-bg); padding: 0.75rem; border: 1px solid var(--border-color); 
-                              border-right: none; border-radius: 8px 0 0 8px; display: flex; align-items: center; font-size: 14px;">
-                            @
-                        </span>
+                              border-right: none; border-radius: 8px 0 0 8px; display: flex; align-items: center; font-size: 14px;">@</span>
                         <input type="text" id="telegram" name="telegram" class="form-control"
                                value="{{ current_user.telegram or '' }}" placeholder="username"
                                style="border-radius: 0 8px 8px 0; border-left: none;">
@@ -84,12 +80,11 @@
             </div>
 
             <div class="form-group">
-                <label for="bio">Обо мне</label>
+                <label for="bio">О себе</label>
                 <textarea id="bio" name="bio" class="form-control" rows="4"
                           placeholder="Расскажите о себе">{{ current_user.bio or '' }}</textarea>
-                <small style="color: var(--text-secondary); font-size: 12px; margin-top: 0.25rem; display: block;">
-                    Максимум 500 символов
-                </small>
+                <small style="color: var(--text-secondary); font-size: 12px; margin-top: 0.25rem; display: block;">Максимум
+                    500 символов</small>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">

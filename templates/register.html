@@ -1,13 +1,21 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - TeamEasy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background: var(--sidebar-bg); min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+<div style="width: 100%; max-width: 400px; padding: 0 1rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="color: var(--primary-color); margin-bottom: 0.5rem;">TeamEasy</h1>
+        <p style="color: var(--text-secondary);">Создайте аккаунт для начала работы</p>
+    </div>
 
-{% block content %}
-<div style="max-width: 400px; margin: 4rem auto; padding: 0 1rem;">
     <div class="card">
         <div class="card-content">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h1 style="margin-bottom: 0.5rem;">Регистрация</h1>
-                <p style="color: var(--text-secondary);">Создайте аккаунт, чтобы начать работу</p>
-            </div>
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">Регистрация</h2>
 
             <form method="POST">
                 <div class="form-group">
@@ -43,6 +51,11 @@
                                placeholder="username" style="border-radius: 0 8px 8px 0; border-left: none;">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="discord">Discord юзернейм (необязательно)</label>
+                    <input type="text" id="discord" name="discord" class="form-control"
+                           placeholder="Введите Discord юзернейм">
+                </div>
 
                 <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
                     Зарегистрироваться
@@ -60,4 +73,5 @@
         </div>
     </div>
 </div>
-{% endblock %}
+</body>
+</html>
