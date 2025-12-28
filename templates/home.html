@@ -1,94 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Добро пожаловать в TeamEasy</h1>
-    <p>Объединяйтесь в команды и разрабатывайте совместные проекты</p>
-</div>
+    <div class="page-header">
+        <h1>Добро пожаловать в TeamEasy</h1>
+        <p>Объединяйтесь в команды и разрабатывайте совместные проекты</p>
+    </div>
 
-<div class="card">
-    <div class="card-content">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
-            <div>
-                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
-                    <i class="icon-create"></i> Начать сейчас
-                </h3>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Создайте свой проект или присоединитесь к существующему</p>
+    <div class="card">
+        <div class="card-content">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                        <i class="icon-create"></i> Начать сейчас
+                    </h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Создайте свой проект или
+                        присоединитесь к существующему</p>
 
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <a href="{{ url_for('create_project') }}" class="btn">Созать проект</a>
-                    <a href="{{ url_for('my_projects') }}" class="btn btn-outline">Мои проекты</a>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <a href="{{ url_for('create_project') }}" class="btn">Созать проект</a>
+                        <a href="{{ url_for('my_projects') }}" class="btn btn-outline">Мои проекты</a>
+                    </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
-</div>
 
-<div class="grid grid-cols-3" style="gap: 1.5rem; margin-top: 2rem;">
-    <div class="card">
-        <div class="card-content" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
-                {{ current_user.projects|length }}
+    <div class="grid grid-cols-3" style="gap: 1.5rem; margin-top: 2rem;">
+        <div class="card">
+            <div class="card-content" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
+                    {{ current_user.projects|length }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Ваших проектов</div>
             </div>
-            <div style="color: var(--text-secondary); font-size: 0.9rem;">Ваших проектов</div>
+        </div>
+        <div class="card">
+            <div class="card-content" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
+                    {% set total_members = [] %}
+                    {% for project in current_user.projects %}
+                        {% set _ = total_members.append(project.members|length) %}
+                    {% endfor %}
+                    {{ total_members|sum }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Участников в ваших проектах</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-content" style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
+                    {{ current_user.project_memberships|length }}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Всего проектов</div>
+            </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-content" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
-                {% set total_members = [] %}
-                {% for project in current_user.projects %}
-                {% set _ = total_members.append(project.members|length) %}
+    <div style="margin-top: 3rem;">
+        <h2 style="margin-bottom: 1.5rem; color: var(--text-primary);">Недавние проекты</h2>
+
+        {% if current_user.projects %}
+            <div class="grid grid-cols-2">
+                {% for project in current_user.projects[:4] %}
+                    <div class="project-card"
+                         onclick="location.href='{{ url_for('project_workspace', project_id=project.id) }}'">
+                        <h3>{{ project.name }}</h3>
+                        <p>{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+
+                        <div class="project-meta">
+                            <span class="project-category">{{ CATEGORIES.get(project.category) }}</span>
+                            <span class="project-date">{{ project.created_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+                            <i class="icon-members"></i> {{ project.members|length }} участников
+                        </div>
+                    </div>
                 {% endfor %}
-                {{ total_members|sum }}
-            </div>
-            <div style="color: var(--text-secondary); font-size: 0.9rem;">Участников в ваших проектах</div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-content" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">
-                {{ current_user.project_memberships|length }}
-            </div>
-            <div style="color: var(--text-secondary); font-size: 0.9rem;">Других проектов</div>
-        </div>
-    </div>
-</div>
-<div style="margin-top: 3rem;">
-    <h2 style="margin-bottom: 1.5rem; color: var(--text-primary);">Недавние проекты</h2>
-
-    {% if current_user.projects %}
-    <div class="grid grid-cols-2">
-        {% for project in current_user.projects[:4] %}
-        <div class="project-card" onclick="location.href='{{ url_for('project_workspace', project_id=project.id) }}'">
-            <h3>{{ project.name }}</h3>
-            <p>{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
-
-            <div class="project-meta">
-                <span class="project-category">{{ CATEGORIES.get(project.category) }}</span>
-                <span class="project-date">{{ project.created_at.strftime('%d.%m.%Y') }}</span>
             </div>
 
-            <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
-                <i class="icon-members"></i> {{ project.members|length }} участников
+            {% if current_user.projects|length > 4 %}
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="{{ url_for('my_projects') }}" class="btn btn-outline">Посмотреть все проекты</a>
+                </div>
+            {% endif %}
+
+        {% else %}
+            <div class="empty-state">
+                <i class="icon-folder"></i>
+                <h3>Пока нет проектов</h3>
+                <a href="{{ url_for('create_project') }}" class="btn" style="margin-top: 1rem;">Создать первый
+                    проект</a>
             </div>
-        </div>
-        {% endfor %}
+        {% endif %}
     </div>
-
-    {% if current_user.projects|length > 4 %}
-    <div style="text-align: center; margin-top: 1.5rem;">
-        <a href="{{ url_for('my_projects') }}" class="btn btn-outline">Посмотреть все проекты</a>
-    </div>
-    {% endif %}
-
-    {% else %}
-    <div class="empty-state">
-        <i class="icon-folder"></i>
-        <h3>Пока нет проектов</h3>
-        <a href="{{ url_for('create_project') }}" class="btn" style="margin-top: 1rem;">Создать первый проект</a>
-    </div>
-    {% endif %}
-</div>
 {% endblock %}

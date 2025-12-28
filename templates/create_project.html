@@ -1,56 +1,56 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Создание проекта</h1>
-</div>
-
-<div class="card">
-    <div class="card-content">
-        <form method="POST">
-            <div class="grid grid-cols-2" style="gap: 1.5rem;">
-                <div class="form-group">
-                    <label for="project_name">Название</label>
-                    <input type="text" id="project_name" name="project_name" class="form-control" required
-                           placeholder="Введите название проекта">
-                </div>
-
-                <div class="form-group">
-                    <label for="category">Категория</label>
-                    <select id="category" name="category" class="form-control">
-                        {% for key, value in CATEGORIES.items() %}
-                        <option value="{{ key }}">{{ value }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="project_description">Описание</label>
-                <textarea id="project_description" name="project_description" class="form-control"
-                          rows="4" required placeholder="Опишите ваш проект"></textarea>
-            </div>
-
-            <div class="grid grid-cols-2" style="gap: 1.5rem;">
-                <div class="form-group">
-                    <label for="github_url">GitHub репозиторий (необязательно)</label>
-                    <input type="url" id="github_url" name="github_url" class="form-control"
-                           placeholder="https://github.com/username/repo">
-                </div>
-
-                <div class="form-group">
-                    <label for="is_public">Видимость проекта</label>
-                    <select id="is_public" name="is_public" class="form-control">
-                        <option value="true">Публичный</option>
-                        <option value="false">Приватный</option>
-                    </select>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn">Создать проект</button>
-            </div>
-        </form>
+    <div class="page-header">
+        <h1>Создание проекта</h1>
     </div>
-</div>
+
+    <div class="card">
+        <div class="card-content">
+            <form method="POST">
+                <div class="grid grid-cols-2" style="gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="project_name">Название</label>
+                        <input type="text" id="project_name" name="project_name" class="form-control" required
+                               placeholder="Введите название проекта">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Категория</label>
+                        <select id="category" name="category" class="form-control">
+                            {% for key, value in CATEGORIES.items() %}
+                                <option value="{{ key }}">{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="project_description">Описание</label>
+                    <textarea id="project_description" name="project_description" class="form-control"
+                              rows="4" required placeholder="Опишите ваш проект"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2" style="gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="github_url">GitHub репозиторий (необязательно)</label>
+                        <input type="url" id="github_url" name="github_url" class="form-control"
+                               placeholder="https://github.com/username/repo">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="is_public">Видимость проекта</label>
+                        <select id="is_public" name="is_public" class="form-control">
+                            <option value="true">Публичный</option>
+                            <option value="false">Приватный</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn">Создать проект</button>
+                </div>
+            </form>
+        </div>
+    </div>
 {% endblock %}

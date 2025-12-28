@@ -1,0 +1,65 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="margin: 0;">{{ event.title }}</h3>
+    <button onclick="closeModal('eventModal')"
+            style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×
+    </button>
+</div>
+
+<form method="POST" action="{{ url_for('update_event', project_id=project_id, event_id=event.id) }}">
+    <div class="form-group">
+        <label for="title">Название</label>
+        <input type="text" id="title" name="title" class="form-control" value="{{ event.title }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Описание</label>
+        <textarea id="description" name="description" class="form-control"
+                  rows="4">{{ event.description or '' }}</textarea>
+    </div>
+
+    <div class="grid grid-cols-2" style="gap: 1rem;">
+        <div class="form-group">
+            <label for="start_date">Дата начала</label>
+            <input type="date" id="start_date" name="start_date" class="form-control"
+                   value="{{ event.start_date.strftime('%Y-%m-%d') }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="start_time">Время начала</label>
+            <input type="time" id="start_time" name="start_time" class="form-control"
+                   value="{{ event.start_date.strftime('%H:%M') if event.start_date.time() else '' }}">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2" style="gap: 1rem;">
+        <div class="form-group">
+            <label for="end_date">Дата окончания</label>
+            <input type="date" id="end_date" name="end_date" class="form-control"
+                   value="{{ event.end_date.strftime('%Y-%m-%d') if event.end_date else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="end_time">Время окончания</label>
+            <input type="time" id="end_time" name="end_time" class="form-control"
+                   value="{{ event.end_date.strftime('%H:%M') if event.end_date and event.end_date.time() else '' }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="location">Место проведения</label>
+        <input type="text" id="location" name="location" class="form-control" value="{{ event.location or '' }}">
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button type="submit" class="btn">Сохранить</button>
+        <button type="button" class="btn btn-outline" onclick="closeModal('eventModal')">Отмена</button>
+    </div>
+</form>
+
+<div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+    <form method="POST" action="{{ url_for('delete_event', project_id=project_id, event_id=event.id) }}"
+          onsubmit="return confirm('Вы уверены, что хотите удалить это событие?')"
+          style="margin-top: 1rem;">
+        <button type="submit" class="btn" style="background: #dc3545; width: 100%;">Удалить событие</button>
+    </form>
+</div>

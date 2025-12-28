@@ -57,26 +57,26 @@
         </div>
         <div class="user-menu">
             {% if current_user.is_authenticated %}
-            <div class="user-avatar"
-                 style="background-image: url('{{ current_user.get_profile_photo_url() }}');">
-            </div>
+                <div class="user-avatar"
+                     style="background-image: url('{{ current_user.get_profile_photo_url() }}');">
+                </div>
             {% else %}
-            <div>
-                <a href="{{ url_for('login') }}" class="btn btn-outline">Войти</a>
-                <a href="{{ url_for('register') }}" class="btn">Зарегистрироваться</a>
-            </div>
+                <div>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline">Войти</a>
+                    <a href="{{ url_for('register') }}" class="btn">Зарегистрироваться</a>
+                </div>
             {% endif %}
         </div>
     </header>
     <div class="content">
         {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flash-messages">
-            {% for category, message in messages %}
-            <div class="flash-message flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}

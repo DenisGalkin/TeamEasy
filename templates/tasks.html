@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="page-header">
+        <div style="display: flex; justify-content: between; align-items: start;">
+            <div>
+                <h1>Задачи проекта</h1>
+                <p>Управляйте задачами проекта "{{ project.name }}"</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn btn-outline">← Назад</a>
+                <button onclick="showCreateTaskModal()" class="btn">+ Новая задача</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3" style="gap: 2rem;">
+        <div class="card">
+            <div class="card-content">
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #dc3545; width: 8px; height: 8px; border-radius: 50%;"></span>
+                    Нужно сделать
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for task in tasks if task.status == 'todo' %}
+                        <div class="task-card" onclick="showTaskModal({{ task.id }})">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0;">{{ task.title }}</h4>
+                                <span class="priority-badge priority-{{ task.priority }}">
+                            {{ task.priority }}
+                        </span>
+                            </div>
+
+                            {% if task.description %}
+                                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 1rem;">
+                                    {{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}
+                                </p>
+                            {% endif %}
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                                <div>
+                                    {% if task.assignee %}
+                                        <span style="color: var(--text-secondary);">Назначена: {{ task.assignee.username }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-secondary);">Не назначена</span>
+                                    {% endif %}
+                                </div>
+                                {% if task.due_date %}
+                                    <span style="color: var(--text-secondary);">
+                            {{ task.due_date.strftime('%d.%m') }}
+                        </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    {% if not tasks or not tasks|selectattr('status', 'equalto', 'todo')|list %}
+                        <div class="empty-task-state">
+                            <p style="color: var(--text-secondary); text-align: center;">Нет задач</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-content">
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #2563eb; width: 8px; height: 8px; border-radius: 50%;"></span>
+                    В работе
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for task in tasks if task.status == 'in_progress' %}
+                        <div class="task-card" onclick="showTaskModal({{ task.id }})">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0;">{{ task.title }}</h4>
+                                <span class="priority-badge priority-{{ task.priority }}">
+                            {{ task.priority }}
+                        </span>
+                            </div>
+
+                            {% if task.description %}
+                                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 1rem;">
+                                    {{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}
+                                </p>
+                            {% endif %}
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                                <div>
+                                    {% if task.assignee %}
+                                        <span style="color: var(--text-secondary);">Назначена: {{ task.assignee.username }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-secondary);">Не назначена</span>
+                                    {% endif %}
+                                </div>
+                                {% if task.due_date %}
+                                    <span style="color: var(--text-secondary);">
+                            {{ task.due_date.strftime('%d.%m') }}
+                        </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    {% if not tasks or not tasks|selectattr('status', 'equalto', 'in_progress')|list %}
+                        <div class="empty-task-state">
+                            <p style="color: var(--text-secondary); text-align: center;">Нет задач</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-content">
+                <h3 style="margin-bottom: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #059669; width: 8px; height: 8px; border-radius: 50%;"></span>
+                    Выполнено
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for task in tasks if task.status == 'done' %}
+                        <div class="task-card" onclick="showTaskModal({{ task.id }})">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0;">{{ task.title }}</h4>
+                                <span class="priority-badge priority-{{ task.priority }}">
+                            {{ task.priority }}
+                        </span>
+                            </div>
+
+                            {% if task.description %}
+                                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 1rem;">
+                                    {{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}
+                                </p>
+                            {% endif %}
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                                <div>
+                                    {% if task.assignee %}
+                                        <span style="color: var(--text-secondary);">Назначена: {{ task.assignee.username }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-secondary);">Не назначена</span>
+                                    {% endif %}
+                                </div>
+                                {% if task.due_date %}
+                                    <span style="color: var(--text-secondary);">
+                            {{ task.due_date.strftime('%d.%m') }}
+                        </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    {% if not tasks or not tasks|selectattr('status', 'equalto', 'done')|list %}
+                        <div class="empty-task-state">
+                            <p style="color: var(--text-secondary); text-align: center;">Нет задач</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal window content -->
+    <div id="createTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3>Создать задачу</h3>
+                <button onclick="closeModal('createTaskModal')"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('create_task', project_id=project.id) }}">
+                <div class="form-group">
+                    <label for="task_title">Название задачи</label>
+                    <input type="text" id="task_title" name="task_title" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="task_description">Описание</label>
+                    <textarea id="task_description" name="task_description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="due_date">Срок выполнения</label>
+                        <input type="date" id="due_date" name="due_date" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">Приоритет</label>
+                        <select id="priority" name="priority" class="form-control">
+                            <option value="low">Низкий</option>
+                            <option value="medium" selected>Средний</option>
+                            <option value="high">Высокий</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="assignee">Назначить на</label>
+                    <select id="assignee" name="assignee" class="form-control">
+                        <option value="">Не назначена</option>
+                        {% for member in members %}
+                            <option value="{{ member.user.id }}">{{ member.user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn">Создать задачу</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('createTaskModal')">Отмена
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal window -->
+    <div id="taskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div id="taskModalContent">
+                <!-- Content downloads via JavaScript -->
+                <!-- Контент загружается через JS -->
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .task-card {
+            background: var(--sidebar-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-card:hover {
+            background: white;
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
+        }
+
+        .priority-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .priority-low {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .empty-task-state {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+    </style>
+
+    <script>
+        function showCreateTaskModal() {
+            document.getElementById('createTaskModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showTaskModal(taskId) {
+            fetch(`/project/{{ project.id }}/tasks/${taskId}/modal`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('taskModalContent').innerHTML = html;
+                    document.getElementById('taskModal').style.display = 'flex';
+                });
+        }
+
+        // Close modal window by click / Закрытие окна по клику вне
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+{% endblock %}

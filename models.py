@@ -67,6 +67,38 @@ class ProjectMember(db.Model):
     joined_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
 
 
+# Task / Задача
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    assigned_to = db.Column(db.Integer, db.ForeignKey('user.id'))
+    due_date = db.Column(db.DateTime)
+    priority = db.Column(db.String(20), default='medium')  # low, medium, high
+    status = db.Column(db.String(20), default='todo')  # todo, in_progress, done
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    project = db.relationship('Project', backref='tasks', lazy=True)
+    assignee = db.relationship('User', foreign_keys=[assigned_to], lazy=True)
+    creator = db.relationship('User', foreign_keys=[created_by], lazy=True)
+
+
+# Event / Событие
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime)
+    location = db.Column(db.String(200))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
+    project = db.relationship('Project', backref='events', lazy=True)
+    creator = db.relationship('User', foreign_keys=[created_by], lazy=True)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))

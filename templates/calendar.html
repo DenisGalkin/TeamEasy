@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="page-header">
+        <div style="display: flex; justify-content: between; align-items: start;">
+            <div>
+                <h1>Календарь событий</h1>
+                <p>Календарь проекта "{{ project.name }}"</p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ url_for('project_workspace', project_id=project.id) }}" class="btn btn-outline">← Назад</a>
+                <button onclick="showCreateEventModal()" class="btn">+ Новое событие</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-content">
+            <div style="margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">{{ month_name }} {{ year }}</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="{{ url_for('project_calendar', project_id=project.id, year=prev_year, month=prev_month) }}"
+                           class="btn btn-outline" style="padding: 0.5rem;">←</a>
+                        <a href="{{ url_for('project_calendar', project_id=project.id, year=today_year, month=today_month) }}"
+                           class="btn btn-outline" style="padding: 0.5rem;">Сегодня</a>
+                        <a href="{{ url_for('project_calendar', project_id=project.id, year=next_year, month=next_month) }}"
+                           class="btn btn-outline" style="padding: 0.5rem;">→</a>
+                    </div>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="calendar-header">Пн</div>
+                    <div class="calendar-header">Вт</div>
+                    <div class="calendar-header">Ср</div>
+                    <div class="calendar-header">Чт</div>
+                    <div class="calendar-header">Пт</div>
+                    <div class="calendar-header">Сб</div>
+                    <div class="calendar-header">Вс</div>
+
+                    {% for week in calendar %}
+                        {% for day in week %}
+                            <div class="calendar-day {% if day.month != current_month %}other-month{% endif %}">
+                                <div class="calendar-day-header">
+                                    {{ day.day }}
+                                </div>
+                                <div class="calendar-day-events">
+                                    {% for event in day.events %}
+                                        <div class="calendar-event" onclick="showEventModal({{ event.id }})">
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <div style="width: 8px; height: 8px; background: #2563eb; border-radius: 50%;"></div>
+                                                <span style="font-size: 11px;">{{ event.title[:20] }}
+                                                    {% if event.title|length > 20 %}...{% endif %}</span>
+                                            </div>
+                                            {% if event.start_date.time() %}
+                                                <div style="font-size: 10px; color: var(--text-secondary); margin-top: 0.25rem;">
+                                                    {{ event.start_date.strftime('%H:%M') }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 1rem;">Предстоящие события</h3>
+                {% if upcoming_events %}
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        {% for event in upcoming_events %}
+                            <div class="event-card" onclick="showEventModal({{ event.id }})">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 0.5rem 0;">{{ event.title }}</h4>
+                                        <div style="display: flex; align-items: center; gap: 1rem; font-size: 14px; color: var(--text-secondary);">
+                                <span>
+                                    📅 {{ event.start_date.strftime('%d.%m.%Y') }}
+                                    {% if event.start_date.time() %}
+                                        в {{ event.start_date.strftime('%H:%M') }}
+                                    {% endif %}
+                                </span>
+                                            {% if event.location %}
+                                                <span>📍 {{ event.location }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">
+                                        {{ event.creator.username }}
+                                    </div>
+                                </div>
+
+                                {% if event.description %}
+                                    <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 14px;">
+                                        {{ event.description[:100] }}{% if event.description|length > 100 %}
+                                            ...{% endif %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <p>Нет предстоящих событий</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal window content -->
+    <div id="createEventModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3>Создать событие</h3>
+                <button onclick="closeModal('createEventModal')"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('create_event', project_id=project.id) }}">
+                <div class="form-group">
+                    <label for="event_title">Название события</label>
+                    <input type="text" id="event_title" name="event_title" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="event_description">Описание</label>
+                    <textarea id="event_description" name="event_description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="start_date">Дата начала</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control" required
+                               value="{{ today }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="start_time">Время начала</label>
+                        <input type="time" id="start_time" name="start_time" class="form-control">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2" style="gap: 1rem;">
+                    <div class="form-group">
+                        <label for="end_date">Дата окончания</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="end_time">Время окончания</label>
+                        <input type="time" id="end_time" name="end_time" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Место проведения</label>
+                    <input type="text" id="location" name="location" class="form-control"
+                           placeholder="Онлайн, офис и т.д.">
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn">Создать событие</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('createEventModal')">Отмена
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal window -->
+    <div id="eventModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div id="eventModalContent">
+                <!-- Content downloads via JS -->
+                <!-- Контент загружается через JS -->
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .calendar-header {
+            background: var(--sidebar-bg);
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 120px;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .calendar-day.other-month {
+            background: #f9fafb;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day-header {
+            text-align: right;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 0.5rem;
+        }
+
+        .calendar-day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .calendar-event {
+            background: #eff6ff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-event:hover {
+            background: #dbeafe;
+        }
+
+        .event-card {
+            background: var(--sidebar-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .event-card:hover {
+            background: white;
+            box-shadow: var(--shadow);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .calendar-header {
+            background: var(--sidebar-bg);
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 100px;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            background: #f9fafb;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day-header {
+            text-align: right;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .calendar-day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-height: 70px;
+            overflow-y: auto;
+        }
+
+        .calendar-event {
+            background: #eff6ff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid #2563eb;
+        }
+
+        .calendar-event:hover {
+            background: #dbeafe;
+            transform: translateX(2px);
+        }
+
+        .event-card {
+            background: var(--sidebar-bg);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+        }
+
+        .event-card:hover {
+            background: white;
+            box-shadow: var(--shadow);
+            transform: translateY(-2px);
+        }
+    </style>
+
+    <script>
+        function showCreateEventModal() {
+            document.getElementById('createEventModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showEventModal(eventId) {
+            fetch(`/project/{{ project.id }}/events/${eventId}/modal`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('eventModalContent').innerHTML = html;
+                    document.getElementById('eventModal').style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                });
+        }
+
+        // Close modal windows by click / Закрытие окна по клику вне
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Set default date / Дефолтная дата и время
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('start_date').value = today;
+            document.getElementById('end_date').value = today;
+        });
+    </script>
+{% endblock %}

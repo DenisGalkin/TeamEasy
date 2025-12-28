@@ -1,6 +1,6 @@
 # **************TeamEasy**************
 # By Denis Galkin
-# V1.0 - BETA 5
+# V1.0 - BETA 6
 # ************************************
 
 # English / Russian
@@ -8,8 +8,10 @@
 # Imports of libraries / Импорты библиотек
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, Project, login_manager, ProjectMember, allowed_file, MAX_FILE_SIZE
+from models import db, User, Project, ProjectMember, login_manager, Task, Event, allowed_file, MAX_FILE_SIZE
 from werkzeug.utils import secure_filename
+from datetime import datetime, timedelta
+import calendar as cal
 import os
 
 app = Flask(__name__)
@@ -132,7 +134,6 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Вы успешно вышли из аккаунта', 'success')
     return redirect(url_for('index'))
 
 
@@ -167,13 +168,13 @@ def edit_profile():
                 if file.content_length > MAX_FILE_SIZE:
                     flash('Файл слишком большой. Максимальный размер - 2MB.', 'error')
                 else:
-                    # Delete old profile photo if it exists and is not default
+                    # Delete old profile photo if it isn't default / Удаление старого фото, если оно не дефолтное
                     if current_user.profile_photo and current_user.profile_photo != 'default-avatar.png':
                         old_photo_path = os.path.join(app.config['PROFILE_PHOTO_FOLDER'], current_user.profile_photo)
                         if os.path.exists(old_photo_path):
                             os.remove(old_photo_path)
 
-                    # Save new profile photo
+                    # Save new profile photo / Сохранение нового фото профиля
                     filename = secure_filename(f"{current_user.id}_{file.filename}")
                     file.save(os.path.join(app.config['PROFILE_PHOTO_FOLDER'], filename))
                     current_user.profile_photo = filename
@@ -273,6 +274,7 @@ def my_projects():
 def project_workspace(project_id):
     project = Project.query.get_or_404(project_id)
 
+    # Access check / Проверка доступа
     is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
     if not is_member and project.owner_id != current_user.id:
         flash('У вас нет доступа к этому проекту', 'error')
@@ -287,6 +289,7 @@ def project_workspace(project_id):
 def project_members(project_id):
     project = Project.query.get_or_404(project_id)
 
+    # Access check / Проверка доступа
     is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
     if not is_member and project.owner_id != current_user.id:
         flash('У вас нет доступа к этому проекту', 'error')
@@ -303,6 +306,7 @@ def project_members(project_id):
 def edit_member_role(project_id, member_id):
     project = Project.query.get_or_404(project_id)
 
+    # Owner check / Проверка на владельца
     if project.owner_id != current_user.id:
         flash('Только владелец проекта может изменять роли участников', 'error')
         return redirect(url_for('project_members', project_id=project_id))
@@ -314,7 +318,7 @@ def edit_member_role(project_id, member_id):
         member.role = new_role
         try:
             db.session.commit()
-            flash('Роль участника успешно обновлена', 'success')
+            flash('Роль участника успешно изменена', 'success')
         except Exception as e:
             db.session.rollback()
             flash('Ошибка при изменении роли: ' + str(e), 'error')
@@ -328,6 +332,7 @@ def edit_member_role(project_id, member_id):
 def remove_member(project_id, member_id):
     project = Project.query.get_or_404(project_id)
 
+    # Owner check / Проверка на владельца
     if project.owner_id != current_user.id:
         flash('Только владелец проекта может удалять участников', 'error')
         return redirect(url_for('project_members', project_id=project_id))
@@ -351,6 +356,7 @@ def remove_member(project_id, member_id):
 def project_settings(project_id):
     project = Project.query.get_or_404(project_id)
 
+    # Owner check / Проверка на владельца
     if project.owner_id != current_user.id:
         flash('Только владелец проекта может изменять настройки', 'error')
         return redirect(url_for('project_workspace', project_id=project_id))
@@ -379,6 +385,7 @@ def project_settings(project_id):
 def delete_project(project_id):
     project = Project.query.get_or_404(project_id)
 
+    # Owner check / Проверка на владельца
     if project.owner_id != current_user.id:
         flash('Только владелец проекта может удалить проект', 'error')
         return redirect(url_for('project_workspace', project_id=project_id))
@@ -393,6 +400,350 @@ def delete_project(project_id):
         db.session.rollback()
         flash('Ошибка при удалении проекта: ' + str(e), 'error')
         return redirect(url_for('project_settings', project_id=project_id))
+
+
+# Task manager / Таск-менеджер
+@app.route('/project/<int:project_id>/tasks')
+@login_required
+def project_tasks(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    # Access check / Проверка доступа
+    is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if not is_member and project.owner_id != current_user.id:
+        flash('У вас нет доступа к этому проекту', 'error')
+        return redirect(url_for('my_projects'))
+
+    # Get tasks / Получение задачи проекта
+    tasks = Task.query.filter_by(project_id=project_id).order_by(Task.created_at.desc()).all()
+
+    # Get members / Получаем участников проекта
+    members = ProjectMember.query.filter_by(project_id=project_id).all()
+
+    return render_template('tasks.html', project=project, tasks=tasks, members=members)
+
+
+# Create task / Создание задач
+@app.route('/project/<int:project_id>/tasks/create', methods=['POST'])
+@login_required
+def create_task(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    # Access check / Проверка доступа
+    is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if not is_member and project.owner_id != current_user.id:
+        flash('У вас нет доступа к этому проекту', 'error')
+        return redirect(url_for('my_projects'))
+
+    title = request.form['task_title']
+    description = request.form.get('task_description', '')
+    due_date_str = request.form.get('due_date')
+    priority = request.form.get('priority', 'medium')
+    assignee_id = request.form.get('assignee')
+
+    due_date = None
+    if due_date_str:
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
+
+    task = Task(
+        project_id=project_id,
+        title=title,
+        description=description,
+        due_date=due_date,
+        priority=priority,
+        status='todo',
+        created_by=current_user.id
+    )
+
+    if assignee_id:
+        task.assigned_to = assignee_id
+
+    try:
+        db.session.add(task)
+        db.session.commit()
+        flash('Задача создана', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при создании задачи: ' + str(e), 'error')
+
+    return redirect(url_for('project_tasks', project_id=project_id))
+
+
+# Task modal / Модальное окно создания задачи
+@app.route('/project/<int:project_id>/tasks/<int:task_id>/modal')
+@login_required
+def task_modal(project_id, task_id):
+    task = Task.query.get_or_404(task_id)
+    members = ProjectMember.query.filter_by(project_id=project_id).all()
+
+    return render_template('task_modal.html', task=task, members=members, project_id=project_id)
+
+
+# Update task / Изменение задачи
+@app.route('/project/<int:project_id>/tasks/<int:task_id>/update', methods=['POST'])
+@login_required
+def update_task(project_id, task_id):
+    task = Task.query.get_or_404(task_id)
+
+    task.title = request.form['title']
+    task.description = request.form.get('description', '')
+    task.status = request.form['status']
+    task.priority = request.form['priority']
+
+    assignee_id = request.form.get('assignee')
+    task.assigned_to = assignee_id if assignee_id else None
+
+    due_date_str = request.form.get('due_date')
+    task.due_date = datetime.strptime(due_date_str, '%Y-%m-%d') if due_date_str else None
+
+    try:
+        db.session.commit()
+        flash('Задача обновлена', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при обновлении задачи: ' + str(e), 'error')
+
+    return redirect(url_for('project_tasks', project_id=project_id))
+
+
+# Delete task / Удаление задачи
+@app.route('/project/<int:project_id>/tasks/<int:task_id>/delete', methods=['POST'])
+@login_required
+def delete_task(project_id, task_id):
+    task = Task.query.get_or_404(task_id)
+
+    if task.created_by != current_user.id:
+        flash('Вы можете удалять только свои задачи', 'error')
+        return redirect(url_for('project_tasks', project_id=project_id))
+
+    try:
+        db.session.delete(task)
+        db.session.commit()
+        flash('Задача удалена', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при удалении задачи: ' + str(e), 'error')
+
+    return redirect(url_for('project_tasks', project_id=project_id))
+
+
+# Calendar / Календарь проекта
+@app.route('/project/<int:project_id>/calendar')
+@app.route('/project/<int:project_id>/calendar/<int:year>/<int:month>')
+@login_required
+def project_calendar(project_id, year=None, month=None):
+    project = Project.query.get_or_404(project_id)
+
+    # Access check / Проверка доступа
+    is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if not is_member and project.owner_id != current_user.id:
+        flash('У вас нет доступа к этому проекту', 'error')
+        return redirect(url_for('my_projects'))
+
+    # During year and month / Текущий год и месяц
+    today = datetime.now()
+    if not year or not month:
+        year = today.year
+        month = today.month
+
+    # Events in this month / Cобытия в этом месяце
+    start_date = datetime(year, month, 1)
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_date = datetime(year, month + 1, 1) - timedelta(days=1)
+
+    events = Event.query.filter(
+        Event.project_id == project_id,
+        Event.start_date >= start_date,
+        Event.start_date <= end_date
+    ).order_by(Event.start_date).all()
+
+    # Calendar creation / Создание календаря
+    cal_obj = cal.Calendar(firstweekday=0)  # 0 = понедельник
+    month_days = cal_obj.monthdayscalendar(year, month)
+
+    month_names = {
+        1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель',
+        5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
+        9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'
+    }
+
+    # Calendar structure / Структура календаря
+    calendar = []
+    for week in month_days:
+        week_days = []
+        for day in week:
+            if day == 0:
+                week_days.append({'day': '', 'month': None, 'events': []})
+            else:
+                day_events = []
+                for event in events:
+                    if event.start_date.day == day and event.start_date.month == month:
+                        day_events.append(event)
+                week_days.append({'day': day, 'month': month, 'events': day_events})
+        calendar.append(week_days)
+
+    # Future events / Предстоящие события
+    upcoming_events = Event.query.filter(
+        Event.project_id == project_id,
+        Event.start_date >= today
+    ).order_by(Event.start_date).limit(5).all()
+
+    # Months navigation / Навигация по месяцам
+    if month == 1:
+        prev_month = 12
+        prev_year = year - 1
+    else:
+        prev_month = month - 1
+        prev_year = year
+
+    if month == 12:
+        next_month = 1
+        next_year = year + 1
+    else:
+        next_month = month + 1
+        next_year = year
+
+    return render_template('calendar.html', project=project, calendar=calendar, events=events,
+                           upcoming_events=upcoming_events, year=year, month=month, current_month=month,
+                           month_name=month_names[month], today=today.strftime('%Y-%m-%d'), today_year=today.year,
+                           today_month=today.month, prev_year=prev_year, prev_month=prev_month, next_year=next_year,
+                           next_month=next_month)
+
+
+# Create event / Создание события
+@app.route('/project/<int:project_id>/events/create', methods=['POST'])
+@login_required
+def create_event(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    # Access check / Проверка доступа
+    is_member = ProjectMember.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if not is_member and project.owner_id != current_user.id:
+        flash('У вас нет доступа к этому проекту', 'error')
+        return redirect(url_for('my_projects'))
+
+    title = request.form['event_title']
+    description = request.form.get('event_description', '')
+    location = request.form.get('location', '')
+
+    # Start date and time / Начальные дата и время
+    start_date_str = request.form['start_date']
+    start_time_str = request.form.get('start_time')
+
+    if start_time_str:
+        start_datetime_str = f"{start_date_str} {start_time_str}"
+        start_date = datetime.strptime(start_datetime_str, '%Y-%m-%d %H:%M')
+    else:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+
+    # End date and time / Конечные дата и время
+    end_date = None
+    end_date_str = request.form.get('end_date')
+    if end_date_str:
+        end_time_str = request.form.get('end_time')
+        if end_time_str:
+            end_datetime_str = f"{end_date_str} {end_time_str}"
+            end_date = datetime.strptime(end_datetime_str, '%Y-%m-%d %H:%M')
+        else:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+    event = Event(
+        project_id=project_id,
+        title=title,
+        description=description,
+        location=location,
+        start_date=start_date,
+        end_date=end_date,
+        created_by=current_user.id
+    )
+
+    try:
+        db.session.add(event)
+        db.session.commit()
+        flash('Событие создано', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при создании события: ' + str(e), 'error')
+
+    return redirect(url_for('project_calendar', project_id=project_id))
+
+
+# Event modal / Модальное окно события
+@app.route('/project/<int:project_id>/events/<int:event_id>/modal')
+@login_required
+def event_modal(project_id, event_id):
+    event = Event.query.get_or_404(event_id)
+
+    return render_template('event_modal.html', event=event, project_id=project_id)
+
+
+# Update event / Изменение события
+@app.route('/project/<int:project_id>/events/<int:event_id>/update', methods=['POST'])
+@login_required
+def update_event(project_id, event_id):
+    event = Event.query.get_or_404(event_id)
+
+    if event.created_by != current_user.id:
+        flash('Вы можете изменять только свои события', 'error')
+        return redirect(url_for('project_calendar', project_id=project_id))
+
+    event.title = request.form['title']
+    event.description = request.form.get('description', '')
+    event.location = request.form.get('location', '')
+
+    # Start date and time / Начальные дата и время
+    start_date_str = request.form['start_date']
+    start_time_str = request.form.get('start_time')
+
+    if start_time_str:
+        start_datetime_str = f"{start_date_str} {start_time_str}"
+        event.start_date = datetime.strptime(start_datetime_str, '%Y-%m-%d %H:%M')
+    else:
+        event.start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+
+    # End date and time / Конечные дата и время
+    end_date_str = request.form.get('end_date')
+    if end_date_str:
+        end_time_str = request.form.get('end_time')
+        if end_time_str:
+            end_datetime_str = f"{end_date_str} {end_time_str}"
+            event.end_date = datetime.strptime(end_datetime_str, '%Y-%m-%d %H:%M')
+        else:
+            event.end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+    else:
+        event.end_date = None
+
+    try:
+        db.session.commit()
+        flash('Событие изменено', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при обновлении события: ' + str(e), 'error')
+
+    return redirect(url_for('project_calendar', project_id=project_id))
+
+
+# Delete event / Удаление события
+@app.route('/project/<int:project_id>/events/<int:event_id>/delete', methods=['POST'])
+@login_required
+def delete_event(project_id, event_id):
+    event = Event.query.get_or_404(event_id)
+
+    if event.created_by != current_user.id:
+        flash('Вы можете удалять только свои события', 'error')
+        return redirect(url_for('project_calendar', project_id=project_id))
+
+    try:
+        db.session.delete(event)
+        db.session.commit()
+        flash('Событие удалено', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при удалении события: ' + str(e), 'error')
+
+    return redirect(url_for('project_calendar', project_id=project_id))
 
 
 if __name__ == '__main__':

@@ -1,38 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Мои проекты</h1>
-    <p>Управляйте проектами, в которых вы состоите</p>
-</div>
-
-{% if projects %}
-<div class="grid grid-cols-3">
-    {% for project in projects %}
-    <div class="project-card" onclick="location.href='{{ url_for('project_workspace', project_id=project.id) }}'">
-        <h3>{{ project.name }}</h3>
-        <p>{{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}</p>
-
-        <div class="project-meta">
-            <span class="project-category">{{ project.category_name }}</span>
-        </div>
-
-        {% if project.github_url %}
-        <div style="margin-top: 1rem;">
-            <a href="{{ project.github_url }}" target="_blank" onclick="event.stopPropagation();"
-               style="color: var(--primary-color);; text-decoration: none; font-size: 14px;">
-                GitHub
-            </a>
-        </div>
-        {% endif %}
+    <div class="page-header">
+        <h1>Мои проекты</h1>
+        <p>Управляйте проектами, в которых вы состоите</p>
     </div>
-    {% endfor %}
-</div>
-{% else %}
-<div class="empty-state">
-    <h3>У вас нет проектов</h3>
-    <p>Создайте свой первый проект</p>
-    <a href="{{ url_for('create_project') }}" class="btn" style="margin-top: 1rem;">Создать проект</a>
-</div>
-{% endif %}
+
+    {% if projects %}
+        <div class="grid grid-cols-3">
+            {% for project in projects %}
+                <div class="project-card"
+                     onclick="location.href='{{ url_for('project_workspace', project_id=project.id) }}'">
+                    <h3>{{ project.name }}</h3>
+                    <p>{{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}</p>
+
+                    <div class="project-meta">
+                        <span class="project-category">{{ project.category_name }}</span>
+                    </div>
+
+                    {% if project.github_url %}
+                        <div style="margin-top: 1rem;">
+                            <a href="{{ project.github_url }}" target="_blank" onclick="event.stopPropagation();"
+                               style="color: var(--primary-color);; text-decoration: none; font-size: 14px;">
+                                GitHub
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>У вас нет проектов</h3>
+            <p>Создайте свой первый проект</p>
+            <a href="{{ url_for('create_project') }}" class="btn" style="margin-top: 1rem;">Создать проект</a>
+        </div>
+    {% endif %}
 {% endblock %}
