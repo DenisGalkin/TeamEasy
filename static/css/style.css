@@ -23,7 +23,7 @@ body {
     color: var(--text-primary);
 }
 
-/* Index page styles */
+/* Index page styles / Стили index.html */
 .landing-page {
     min-height: 100vh;
 }
@@ -147,7 +147,7 @@ body {
     margin-right: auto;
 }
 
-/* Features */
+/* Features / Фичи */
 .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -188,32 +188,7 @@ body {
     line-height: 1.6;
 }
 
-/* Stats */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin: 3rem 0;
-}
-
-.stat-card {
-    text-align: center;
-    padding: 1.5rem;
-}
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
-/* How It Works */
+/* How It Works / Как это работает */
 .steps-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -251,7 +226,7 @@ body {
     line-height: 1.6;
 }
 
-/* CTA section */
+/* CTA section / CTA секуция (Готовы начать?) */
 .cta-section {
     background: var(--sidebar-bg);
     padding: 4rem 2rem;
@@ -275,7 +250,7 @@ body {
     font-size: 1.1rem;
 }
 
-/* Footer */
+/* Footer / Футер */
 .landing-footer {
     background: var(--sidebar-bg);
     padding: 3rem 2rem;
@@ -325,7 +300,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* Sidebar */
+/* Sidebar / Боковое меню */
 .sidebar {
     width: 260px;
     background: var(--sidebar-bg);
@@ -391,7 +366,7 @@ body {
     filter: none;
 }
 
-/* Main content */
+/* Main content / Основной контент */
 .main-content {
     flex: 1;
     margin-left: 260px;
@@ -462,7 +437,7 @@ body {
     background-repeat: no-repeat;
 }
 
-/* Content area */
+/* Content area / Зона контнета (отступы) */
 .content {
     padding: 2rem;
     max-width: 1200px;
@@ -483,7 +458,7 @@ body {
     font-size: 1.1rem;
 }
 
-/* Cards */
+/* Cards / Карточки */
 .card {
     background: white;
     border-radius: 12px;
@@ -500,7 +475,7 @@ body {
     padding: 1.5rem;
 }
 
-/* Buttons */
+/* Buttons / Кнопки */
 .btn {
     background: var(--primary-color);
     color: white;
@@ -550,7 +525,7 @@ body {
     background: #c82333;
 }
 
-/* Forms */
+/* Forms / Формы */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -583,7 +558,7 @@ textarea.form-control {
     font-family: inherit;
 }
 
-/* Profile photo */
+/* Profile photo / Фото профиля */
 .profile-photo-section {
     text-align: center;
     margin-bottom: 2rem;
@@ -646,7 +621,7 @@ textarea.form-control {
     border: 2px solid var(--border-color);
 }
 
-/* Grid */
+/* Grid / Сетка */
 .grid {
     display: grid;
     gap: 1.5rem;
@@ -664,7 +639,7 @@ textarea.form-control {
     grid-template-columns: repeat(3, 1fr);
 }
 
-/* Project cards */
+/* Project cards / Карточки проектов */
 .project-card {
     background: white;
     border-radius: 12px;
@@ -716,7 +691,7 @@ textarea.form-control {
     font-size: 12px;
 }
 
-/* Flash messages */
+/* Flash messages / Флеш сообщения */
 .flash-messages {
     margin-bottom: 1.5rem;
 }
@@ -754,7 +729,7 @@ textarea.form-control {
     filter: grayscale(1) brightness(0.7);
 }
 
-/* Responsive */
+/* Responsive / Совместимость */
 @media (max-width: 1024px) {
     .sidebar {
         width: 80px;

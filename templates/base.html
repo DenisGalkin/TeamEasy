@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html>f
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,7 +43,7 @@
     </div>
 
     <div style="padding: 0 1rem; margin-top: auto;">
-        <a href="{{ url_for('logout') }}" class="nav-link">
+        <a href="{{ url_for('logout') }}" class="nav-link" style="color: #dc3545;">
             <span>Выйти</span>
         </a>
     </div>
@@ -56,16 +55,9 @@
             <input type="text" placeholder="Поиск проектов и пользователей">
         </div>
         <div class="user-menu">
-            {% if current_user.is_authenticated %}
-                <div class="user-avatar"
-                     style="background-image: url('{{ current_user.get_profile_photo_url() }}');">
-                </div>
-            {% else %}
-                <div>
-                    <a href="{{ url_for('login') }}" class="btn btn-outline">Войти</a>
-                    <a href="{{ url_for('register') }}" class="btn">Зарегистрироваться</a>
-                </div>
-            {% endif %}
+            <div class="user-avatar"
+                 style="background-image: url('{{ current_user.get_profile_photo_url() }}');">
+            </div>
         </div>
     </header>
     <div class="content">

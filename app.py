@@ -1,7 +1,7 @@
-# **************TeamEasy**************
+# ************** TeamEasy **************
 # By Denis Galkin
-# V1.0 - BETA 6
-# ************************************
+# V1.0 - BETA 7
+# **************************************
 
 # English / Russian
 
@@ -89,10 +89,12 @@ def register():
         if telegram and telegram.startswith('@'):
             telegram = telegram[1:]
 
+        # Username unique check / Проверка уникальности имени пользователя
         if User.query.filter_by(username=username).first():
             flash('Имя пользователя уже занято', category='error')
             return redirect(url_for('register'))
 
+        # Mail unique check / Проверка уникальности почты
         if User.query.filter_by(email=email).first():
             flash('Эта почта уже привязана к другому аккаунту', category='error')
             return redirect(url_for('register'))
@@ -119,6 +121,7 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
 
+        # Check username and password / Проверка имени и пароля
         if user and user.check_password(password):
             login_user(user)
             next_page = request.args.get('next')
@@ -215,7 +218,7 @@ def delete_profile_photo():
     return redirect(url_for('edit_profile'))
 
 
-# Create project / Функция создания проекта
+# Create project / Создание проекта
 @app.route('/create_project', methods=['GET', 'POST'])
 def create_project():
     if not current_user.is_authenticated:
@@ -240,7 +243,7 @@ def create_project():
         try:
             db.session.add(project)
             db.session.flush()
-
+            # Setting owner / Назначение владельца
             owner_member = ProjectMember(
                 project_id=project.id,
                 user_id=current_user.id,
@@ -512,6 +515,7 @@ def update_task(project_id, task_id):
 def delete_task(project_id, task_id):
     task = Task.query.get_or_404(task_id)
 
+    # Task creator check / Проверка на создателя задачи
     if task.created_by != current_user.id:
         flash('Вы можете удалять только свои задачи', 'error')
         return redirect(url_for('project_tasks', project_id=project_id))
@@ -527,7 +531,7 @@ def delete_task(project_id, task_id):
     return redirect(url_for('project_tasks', project_id=project_id))
 
 
-# Calendar / Календарь проекта
+# Project calendar / Календарь проекта
 @app.route('/project/<int:project_id>/calendar')
 @app.route('/project/<int:project_id>/calendar/<int:year>/<int:month>')
 @login_required
@@ -546,7 +550,7 @@ def project_calendar(project_id, year=None, month=None):
         year = today.year
         month = today.month
 
-    # Events in this month / Cобытия в этом месяце
+    # Events in this month / События в этом месяце
     start_date = datetime(year, month, 1)
     if month == 12:
         end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
@@ -685,6 +689,7 @@ def event_modal(project_id, event_id):
 def update_event(project_id, event_id):
     event = Event.query.get_or_404(event_id)
 
+    # Event creator check / Проверка на создателя события
     if event.created_by != current_user.id:
         flash('Вы можете изменять только свои события', 'error')
         return redirect(url_for('project_calendar', project_id=project_id))
@@ -731,6 +736,7 @@ def update_event(project_id, event_id):
 def delete_event(project_id, event_id):
     event = Event.query.get_or_404(event_id)
 
+    # Event creator check / Проверка на владельца события
     if event.created_by != current_user.id:
         flash('Вы можете удалять только свои события', 'error')
         return redirect(url_for('project_calendar', project_id=project_id))
@@ -746,7 +752,8 @@ def delete_event(project_id, event_id):
     return redirect(url_for('project_calendar', project_id=project_id))
 
 
+# Website launch / Запуск сайта
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

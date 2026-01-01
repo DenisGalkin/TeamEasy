@@ -67,7 +67,7 @@ class ProjectMember(db.Model):
     joined_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
 
 
-# Task / Задача
+# Tasks / Задачи
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
@@ -84,7 +84,7 @@ class Task(db.Model):
     creator = db.relationship('User', foreign_keys=[created_by], lazy=True)
 
 
-# Event / Событие
+# Events / События
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
