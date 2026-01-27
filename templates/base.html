@@ -12,13 +12,13 @@
             <h1>TeamEasy</h1>
         </a>
     </div>
-
     <div class="nav-links">
         <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
             <span>Главная</span>
         </a>
 
-        <a href="" class="nav-link">
+        <a href="{{ url_for('search_projects') }}"
+           class="nav-link {% if request.endpoint == 'search_projects' %}active{% endif %}">
             <span>Поиск</span>
         </a>
 
@@ -32,7 +32,8 @@
             <span>Создать проект</span>
         </a>
 
-        <a href="" class="nav-link">
+        <a href="{{ url_for('notifications') }}"
+           class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}">
             <span>Уведомления</span>
         </a>
 
@@ -52,12 +53,10 @@
 <main class="main-content">
     <header class="top-bar">
         <div class="search-bar">
-            <input type="text" placeholder="Поиск проектов и пользователей">
-        </div>
-        <div class="user-menu">
-            <div class="user-avatar"
-                 style="background-image: url('{{ current_user.get_profile_photo_url() }}');">
-            </div>
+            <form method="GET" action="{{ url_for('search_projects') }}" style="display: flex; width: 100%;">
+                <input type="text" name="q" placeholder="Поиск проектов и пользователей"
+                       value="{{ request.args.get('q', '') }}" style="flex: 1;">
+            </form>
         </div>
     </header>
     <div class="content">

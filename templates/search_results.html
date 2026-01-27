@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h1>Поиск проектов</h1>
+            <p>Найдите интересные проекты и присоединяйтесь к ним</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-content">
+        <form method="GET" action="{{ url_for('search_projects') }}" style="margin-bottom: 2rem;">
+            <div class="grid grid-cols-2" style="gap: 1rem;">
+                <div class="form-group">
+                    <label for="q">Поиск по названию или описанию</label>
+                    <input type="text" id="q" name="q" class="form-control" 
+                           value="{{ query }}" placeholder="Введите ключевые слова...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Категория</label>
+                    <select id="category" name="category" class="form-control">
+                        <option value="">Все категории</option>
+                        {% for key, value in categories.items() %}
+                            <option value="{{ key }}" {% if category== key %}selected{% endif %}>
+                                {{ value }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn">Поиск</button>
+                {% if query or category %}
+                    <a href="{{ url_for('search_projects') }}" class="btn btn-outline">Сбросить</a>
+                {% endif %}
+            </div>
+        </form>
+        
+        {% if query or category %}
+            <h3 style="margin-bottom: 1.5rem;">
+                {% if projects.total > 0 %}
+                    Найдено проектов: {{ projects.total }}
+                {% else %}
+                    Проекты не найдены
+                {% endif %}
+            </h3>
+        {% endif %}
+        
+        {% if projects.total > 0 %}
+            <div class="grid grid-cols-3">
+                {% for project in projects.items %}
+                    <div class="project-card" onclick="showProjectDetails({{ project.id }})">
+                        <h3>{{ project.name }}</h3>
+                        <p>{{ project.description[:120] }}{% if project.description|length > 120 %}...{% endif %}</p>
+                        
+                        <div class="project-meta">
+                            <span class="project-category">{{ categories.get(project.category, "Другое") }}</span>
+                            <span class="project-date">{{ project.created_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+                            <i class="icon-members"></i> {{ project.members|length }} участников
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            {% if projects.pages > 1 %}
+                <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
+                    {% if projects.has_prev %}
+                        <a href="{{ url_for('search_projects', q=query, category=category, page=projects.prev_num) }}" 
+                           class="btn btn-outline">←</a>
+                    {% endif %}
+                    
+                    <span style="display: flex; align-items: center; padding: 0 1rem;">
+                        Страница {{ projects.page }} из {{ projects.pages }}
+                    </span>
+                    
+                    {% if projects.has_next %}
+                        <a href="{{ url_for('search_projects', q=query, category=category, page=projects.next_num) }}" 
+                           class="btn btn-outline">→</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+        {% elif query or category %}
+            <div class="empty-state">
+                <p>По вашему запросу ничего не найдено</p>
+                <a href="{{ url_for('search_projects') }}" class="btn" style="margin-top: 1rem;">Показать все проекты</a>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>Введите поисковый запрос, чтобы найти проекты</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно деталей проекта -->
+<div id="projectDetailsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div id="projectDetailsContent">
+            <!-- Контент загружается через JavaScript -->
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .join-message {
+        margin: 1rem 0;
+    }
+    
+    .join-message textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-family: inherit;
+        resize: vertical;
+    }
+</style>
+
+<script>
+    function showProjectDetails(projectId) {
+        fetch(`/project/${projectId}/details`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('projectDetailsContent').innerHTML = html;
+                document.getElementById('projectDetailsModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+    }
+    
+    function closeProjectModal() {
+        document.getElementById('projectDetailsModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Закрытие модального окна при клике вне его
+    window.onclick = function(event) {
+        if (event.target.id === 'projectDetailsModal') {
+            closeProjectModal();
+        }
+    }
+</script>
+{% endblock %}

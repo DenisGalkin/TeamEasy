@@ -1,0 +1,93 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="margin: 0;">{{ project.name }}</h3>
+    <button onclick="closeProjectModal()"
+            style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×
+    </button>
+</div>
+
+<div style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <span class="project-category" style="font-size: 14px;">{{ project.category_name }}</span>
+        <span style="color: var(--text-secondary); font-size: 14px;">
+            Создан {{ project.created_at.strftime('%d.%m.%Y') }}
+        </span>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+        <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Описание</label>
+        <div style="background: var(--sidebar-bg); padding: 1rem; border-radius: 8px; line-height: 1.6;">
+            {{ project.description|replace('\n', '<br>')|safe }}
+        </div>
+    </div>
+
+    {% if project.github_url %}
+        <div style="margin-bottom: 1.5rem;">
+            <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">GitHub репозиторий</label>
+            <p>
+                <a href="{{ project.github_url }}" target="_blank"
+                   style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+                    {{ project.github_url }}
+                </a>
+            </p>
+        </div>
+    {% endif %}
+
+    <div style="margin-bottom: 1.5rem;">
+        <label style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0.5rem;">Владелец проекта</label>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color);
+                 color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px;">
+                {{ project.owner.username[0].upper() }}
+            </div>
+            <span style="font-weight: 500;">{{ project.owner.username }}</span>
+        </div>
+    </div>
+
+    <div style="color: var(--text-secondary); font-size: 14px;">
+        <i class="icon-members"></i> {{ project.members|length }} участников
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+    {% if is_member %}
+        <div style="padding: 1rem; background: #dcfce7; color: #166534; border-radius: 8px; text-align: center;">
+            ✅ Вы уже являетесь участником этого проекта
+        </div>
+    {% elif has_pending_request %}
+        <div style="padding: 1rem; background: #fef3c7; color: #92400e; border-radius: 8px; text-align: center;">
+            ⏳ Заявка на присоединение отправлена. Ожидайте ответа владельца.
+        </div>
+    {% elif project.owner_id == current_user.id %}
+        <div style="padding: 1rem; background: #dbeafe; color: #1e40af; border-radius: 8px; text-align: center;">
+            👑 Вы являетесь владельцем этого проекта
+        </div>
+    {% else %}
+        <form id="joinForm" method="POST" action="{{ url_for('request_to_join', project_id=project.id) }}">
+            <div class="join-message">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                    Сообщение владельцу (необязательно):
+                </label>
+                <textarea name="message" placeholder="Расскажите, почему хотите присоединиться к проекту..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn" style="flex: 1;">Запросить присоединение</button>
+                <button type="button" class="btn btn-outline" onclick="closeProjectModal()">Отмена</button>
+            </div>
+        </form>
+
+        <script>
+            document.getElementById('joinForm').onsubmit = function(e) {
+                if (confirm('Отправить заявку на присоединение к проекту?')) {
+                    return true;
+                }
+                return false;
+            }
+        </script>
+    {% endif %}
+{% else %}
+    <div style="padding: 1rem; background: var(--sidebar-bg); border-radius: 8px; text-align: center;">
+        <p style="margin-bottom: 1rem;">Для отправки заявки на присоединение необходимо войти в систему</p>
+        <a href="{{ url_for('login', next=url_for('search_projects')) }}" class="btn">Войти</a>
+    </div>
+{% endif %}

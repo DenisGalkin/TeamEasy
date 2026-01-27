@@ -83,7 +83,18 @@
                         <div class="grid grid-cols-2">
                             {% for project in projects %}
                                 <div class="project-card">
-                                    <h4>{{ project.name }}</h4>
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <h4>{{ project.name }}</h4>
+                                        {% if project.user_role == "Владелец" %}
+                                            <span style="background: #2563eb; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 11px;">
+                                                👑 {{ project.user_role }}
+                                            </span>
+                                        {% else %}
+                                            <span style="background: #059669; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 11px;">
+                                                👥 {{ project.user_role }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                     <p>{{ project.description[:100] }}{% if project.description|length > 100 %}
                                         ...{% endif %}</p>
 
@@ -96,7 +107,6 @@
                         </div>
                     {% else %}
                         <div class="empty-state" style="padding: 2rem;">
-                            <i></i>
                             <p>Нет публичных проектов</p>
                         </div>
                     {% endif %}

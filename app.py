@@ -1,6 +1,6 @@
 # ************** TeamEasy **************
 # By Denis Galkin
-# V1.0 - BETA 7
+# V1.0 - BETA 8
 # **************************************
 
 # English / Russian
@@ -8,7 +8,7 @@
 # Imports of libraries / Импорты библиотек
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, Project, ProjectMember, login_manager, Task, Event, allowed_file, MAX_FILE_SIZE
+from models import db, User, Project, ProjectMember, login_manager, Task, Event, allowed_file, MAX_FILE_SIZE, JoinRequest, Notification
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import calendar as cal
@@ -144,11 +144,31 @@ def logout():
 @app.route('/profile/<username>')
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    user_projects = Project.query.filter_by(owner_id=user.id, is_public=True).order_by(Project.created_at.desc()).all()
-    for project in user_projects:
-        project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
+    
+    # Receiving projects where the user is owner / Получаем проекты, где пользователь владелец
+    owned_projects = Project.query.filter_by(owner_id=user.id, is_public=True).order_by(Project.created_at.desc()).all()
+    
+    # Receiving projects where the user is member / Получаем проекты, где пользователь участник
+    member_projects = Project.query.join(
+        ProjectMember
+    ).filter(
+        ProjectMember.user_id == user.id,
+        Project.owner_id != user.id,
+        Project.is_public == True
+    ).order_by(Project.created_at.desc()).all()
 
-    return render_template('profile.html', user=user, projects=user_projects)
+    all_projects = owned_projects + member_projects
+    
+    for project in all_projects:
+        project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
+        # Role definition / Определение роли
+        if project.owner_id == user.id:
+            project.user_role = "Владелец"
+        else:
+            member = ProjectMember.query.filter_by(project_id=project.id, user_id=user.id).first()
+            project.user_role = member.role if member else "Участник"
+
+    return render_template('profile.html', user=user, projects=all_projects)
 
 
 # Edit profile / Редактирование профиля
@@ -265,10 +285,24 @@ def create_project():
 @app.route('/my_projects')
 @login_required
 def my_projects():
-    user_projects = Project.query.filter_by(owner_id=current_user.id).order_by(Project.created_at.desc()).all()
-    for project in user_projects:
+    # Receiving projects where the user is owner / Получаем проекты, где пользователь владелец
+    owned_projects = Project.query.filter_by(owner_id=current_user.id).order_by(Project.created_at.desc()).all()
+    
+    # Receiving projects where the user is member / Получаем проекты, где пользователь участник
+    member_projects = Project.query.join(
+        ProjectMember
+    ).filter(
+        ProjectMember.user_id == current_user.id,
+        Project.owner_id != current_user.id
+    ).order_by(Project.created_at.desc()).all()
+    
+    # Merging / Объединение
+    all_projects = owned_projects + member_projects
+    
+    for project in all_projects:
         project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
-    return render_template('my_projects.html', projects=user_projects)
+    
+    return render_template('my_projects.html', projects=all_projects)
 
 
 # Project workspace / Рабочее пространство проекта
@@ -341,11 +375,24 @@ def remove_member(project_id, member_id):
         return redirect(url_for('project_members', project_id=project_id))
 
     member = ProjectMember.query.get_or_404(member_id)
+    user_to_remove = User.query.get(member.user_id)
 
     try:
+        # Creating notification / Создание уведомления
+        notification = Notification(
+            user_id=member.user_id,
+            title=f'Вас удалили из проекта',
+            message=f'Вас удалили из проекта "{project.name}"',
+            type='member_removed',
+            related_id=project_id
+        )
+        db.session.add(notification)
+        
         db.session.delete(member)
         db.session.commit()
-        flash('Участник удален из проекта', 'success')
+        
+        flash(f'Участник {user_to_remove.username} удален из проекта', 'success')
+        
     except Exception as e:
         db.session.rollback()
         flash('Ошибка при удалении участника: ' + str(e), 'error')
@@ -394,14 +441,32 @@ def delete_project(project_id):
         return redirect(url_for('project_workspace', project_id=project_id))
 
     try:
-        ProjectMember.query.filter_by(project_id=project_id).delete()
+        # Getting join requests / Получение всех заявок на присоединение
+        join_requests = JoinRequest.query.filter_by(project_id=project_id).all()
+
+        for join_request in join_requests:
+            # Deleting notifications / Удаление уведомлений
+            Notification.query.filter_by(
+                related_id=join_request.id,
+                type='join_request'
+            ).delete()
+
+            Notification.query.filter_by(
+                related_id=project_id,
+                type='join_result',
+                user_id=join_request.user_id
+            ).delete()
+
+        # Deleting project / Удаление проекта
         db.session.delete(project)
         db.session.commit()
+
         flash('Проект удален', 'success')
         return redirect(url_for('my_projects'))
+
     except Exception as e:
         db.session.rollback()
-        flash('Ошибка при удалении проекта: ' + str(e), 'error')
+        flash(f'Ошибка при удалении проекта: {str(e)}', 'error')
         return redirect(url_for('project_settings', project_id=project_id))
 
 
@@ -417,10 +482,10 @@ def project_tasks(project_id):
         flash('У вас нет доступа к этому проекту', 'error')
         return redirect(url_for('my_projects'))
 
-    # Get tasks / Получение задачи проекта
+    # Getting tasks / Получение задачи проекта
     tasks = Task.query.filter_by(project_id=project_id).order_by(Task.created_at.desc()).all()
 
-    # Get members / Получаем участников проекта
+    # Getting members / Получение участников проекта
     members = ProjectMember.query.filter_by(project_id=project_id).all()
 
     return render_template('tasks.html', project=project, tasks=tasks, members=members)
@@ -750,6 +815,275 @@ def delete_event(project_id, event_id):
         flash('Ошибка при удалении события: ' + str(e), 'error')
 
     return redirect(url_for('project_calendar', project_id=project_id))
+
+
+# Search projects / Поиск проектов
+@app.route('/search')
+def search_projects():
+    query = request.args.get('q', '')
+    category = request.args.get('category', '')
+    page = request.args.get('page', 1, type=int)
+
+    # Getting public projects / Получаем публичные проекты
+    projects_query = Project.query.filter_by(is_public=True)
+
+    if query:
+        projects_query = projects_query.filter(
+            (Project.name.ilike(f'%{query}%')) |
+            (Project.description.ilike(f'%{query}%'))
+        )
+
+    if category and category in CATEGORIES:
+        projects_query = projects_query.filter_by(category=category)
+
+    projects = projects_query.order_by(Project.created_at.desc()).paginate(
+        page=page, per_page=12, error_out=False
+    )
+
+    return render_template('search_results.html',
+                           projects=projects,
+                           query=query,
+                           category=category,
+                           categories=CATEGORIES)
+
+
+# Project details modal / Детали проекта (модальное окно)
+@app.route('/project/<int:project_id>/details')
+def project_details(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    has_pending_request = False
+    is_member = False
+
+    if current_user.is_authenticated:
+        # Check for pending request / Проверка наличия заявки
+        pending_request = JoinRequest.query.filter_by(
+            project_id=project_id,
+            user_id=current_user.id,
+            status='pending'
+        ).first()
+        has_pending_request = pending_request is not None
+
+        # Unless user is member of this project already / Проверка, что пользователь не является участником уже
+        is_member = ProjectMember.query.filter_by(
+            project_id=project_id,
+            user_id=current_user.id
+        ).first() is not None
+
+    project.category_name = CATEGORIES.get(project.category, "Неизвестная категория")
+
+    return render_template('project_details_modal.html',
+                           project=project,
+                           has_pending_request=has_pending_request,
+                           is_member=is_member)
+
+
+# Request to join / Запрос на присоединение
+@app.route('/project/<int:project_id>/join', methods=['POST'])
+@login_required
+def request_to_join(project_id):
+    project = Project.query.get_or_404(project_id)
+
+    # Public check / Проверка публичности проекта
+    if not project.is_public:
+        flash('Этот проект приватный', 'error')
+        return redirect(url_for('search_projects'))
+
+    # If user is member of this project / Если пользователь участник проекта
+    existing_member = ProjectMember.query.filter_by(
+        project_id=project_id,
+        user_id=current_user.id
+    ).first()
+
+    if existing_member:
+        flash('Вы уже являетесь участником этого проекта', 'error')
+        return redirect(url_for('search_projects'))
+
+    # If user have already sent a request / Если пользователь уже отправил заявку
+    existing_request = JoinRequest.query.filter_by(
+        project_id=project_id,
+        user_id=current_user.id,
+        status='pending'
+    ).first()
+
+    if existing_request:
+        flash('Вы уже отправили заявку на присоединение', 'error')
+        return redirect(url_for('search_projects'))
+
+    # If user is owner of this project / Если пользователь владелец проекта
+    if project.owner_id == current_user.id:
+        flash('Вы являетесь владельцем этого проекта', 'error')
+        return redirect(url_for('search_projects'))
+
+    # Creating request / Создание заявки
+    message = request.form.get('message', '')
+
+    join_request = JoinRequest(
+        project_id=project_id,
+        user_id=current_user.id,
+        message=message,
+        status='pending'
+    )
+
+    db.session.add(join_request)
+    db.session.flush()  # Getting request id / Получение ID заявки
+
+    # Creating notification / Создание уведомления
+    notification = Notification(
+        user_id=project.owner_id,
+        title=f'Новая заявка на присоединение',
+        message=f'Пользователь {current_user.username} хочет присоединиться к вашему проекту "{project.name}"',
+        type='join_request',
+        related_id=join_request.id
+    )
+
+    try:
+        db.session.add(notification)
+        db.session.commit()
+        flash('Заявка на присоединение отправлена', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при отправке заявки: {str(e)}', 'error')
+
+    return redirect(url_for('search_projects'))
+
+
+# Handle join request / Обработка заявки на присоединение
+@app.route('/join_request/<int:request_id>/<action>', methods=['POST'])
+@login_required
+def handle_join_request(request_id, action):
+    join_request = JoinRequest.query.get_or_404(request_id)
+    project = Project.query.get_or_404(join_request.project_id)
+
+    # Owner check / Проверка на владельца
+    if project.owner_id != current_user.id:
+        flash('Только владелец проекта может обрабатывать заявки', 'error')
+        return redirect(url_for('notifications'))
+
+    if action not in ['accept', 'reject']:
+        flash('Неверное действие', 'error')
+        return redirect(url_for('notifications'))
+
+    if join_request.status != 'pending':
+        flash('Эта заявка уже была обработана', 'error')
+        return redirect(url_for('notifications'))
+
+    # Update request status / Обновляем статус заявки
+    join_request.status = 'accepted' if action == 'accept' else 'rejected'
+
+    # Creating notification / Создание уведомления
+    if action == 'accept':
+        notification_title = 'Заявка принята'
+        notification_message = f'Ваша заявка на присоединение к проекту "{project.name}" была принята'
+
+        # Adding user to project / Добавление пользователя в проект
+        new_member = ProjectMember(
+            project_id=project.id,
+            user_id=join_request.user_id,
+            role='Участник'
+        )
+        db.session.add(new_member)
+
+    else:
+        notification_title = 'Заявка отклонена'
+        notification_message = f'Ваша заявка на присоединение к проекту "{project.name}" была отклонена'
+
+    notification = Notification(
+        user_id=join_request.user_id,
+        title=notification_title,
+        message=notification_message,
+        type='join_result',
+        related_id=project.id
+    )
+
+    try:
+        db.session.add(notification)
+        db.session.commit()
+
+        if action == 'accept':
+            flash(f'Пользователь {join_request.user.username} добавлен в проект', 'success')
+        else:
+            flash(f'Заявка пользователя {join_request.user.username} отклонена', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при обработке заявки: {str(e)}', 'error')
+
+    return redirect(url_for('notifications'))
+
+
+# Notifications / Уведомления
+@app.route('/notifications')
+@login_required
+def notifications():
+    # Getting all notifications / Получаем все уведомления пользователя
+    user_notifications = Notification.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Notification.created_at.desc()).all()
+
+    # Collecting data / Собираем данные для шаблона
+    notifications_data = []
+    for notification in user_notifications:
+        notification_dict = {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.type,
+            'related_id': notification.related_id,
+            'is_read': notification.is_read,
+            'created_at': notification.created_at,
+            'join_request': None
+        }
+
+        if notification.type == 'join_request':
+            join_request = JoinRequest.query.get(notification.related_id)
+            if join_request:
+                # Getting user and project info / Получаем информацию о пользователе и проекте
+                join_request_user = User.query.get(join_request.user_id)
+                join_request_project = Project.query.get(join_request.project_id)
+
+                notification_dict['join_request'] = {
+                    'id': join_request.id,
+                    'status': join_request.status,
+                    'user_id': join_request.user_id,
+                    'user_username': join_request_user.username if join_request_user else 'Неизвестный пользователь',
+                    'project_id': join_request.project_id,
+                    'project_name': join_request_project.name if join_request_project else 'Неизвестный проект'
+                }
+
+        notifications_data.append(notification_dict)
+
+    # Mark notifications as read / Помечаем уведомления как прочитанные
+    for notification in user_notifications:
+        if not notification.is_read:
+            notification.is_read = True
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при обновлении уведомлений: {str(e)}', 'error')
+
+    return render_template('notifications.html', notifications=notifications_data)
+
+
+# Clear notifications / Очистка уведомлений
+@app.route('/notifications/clear', methods=['POST'])
+@login_required
+def clear_notifications():
+    Notification.query.filter_by(
+        user_id=current_user.id,
+        is_read=True
+    ).delete()
+
+    try:
+        db.session.commit()
+        flash('Уведомления очищены', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ошибка при очистке уведомлений: {str(e)}', 'error')
+
+    return redirect(url_for('notifications'))
 
 
 # Website launch / Запуск сайта

@@ -29,9 +29,16 @@ class User(UserMixin, db.Model):
     bio = db.Column(db.String(500))
     password_hash = db.Column(db.String(128))
     profile_photo = db.Column(db.String(255), default='default-avatar.png')
-    projects = db.relationship('Project', backref='owner', lazy=True)
-    project_memberships = db.relationship('ProjectMember', backref='user', lazy=True)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
+
+    # Relationships
+    projects = db.relationship('Project', backref='owner', lazy=True)
+    project_memberships = db.relationship('ProjectMember', back_populates='user', lazy=True)
+    join_requests = db.relationship('JoinRequest', back_populates='user', lazy=True)
+    notifications = db.relationship('Notification', back_populates='user', lazy=True)
+    created_tasks = db.relationship('Task', foreign_keys='Task.created_by', back_populates='creator', lazy=True)
+    assigned_tasks = db.relationship('Task', foreign_keys='Task.assigned_to', back_populates='assignee', lazy=True)
+    created_events = db.relationship('Event', back_populates='creator', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -55,7 +62,12 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
     category = db.Column(db.String(40), nullable=False)
     is_public = db.Column(db.Boolean, default=True)
-    members = db.relationship('ProjectMember', backref='project', lazy=True)
+
+    # Relationships
+    members = db.relationship('ProjectMember', back_populates='project', lazy=True, cascade='all, delete-orphan')
+    join_requests = db.relationship('JoinRequest', back_populates='project', lazy=True, cascade='all, delete-orphan')
+    tasks = db.relationship('Task', back_populates='project', lazy=True, cascade='all, delete-orphan')
+    events = db.relationship('Event', back_populates='project', lazy=True, cascade='all, delete-orphan')
 
 
 # Project Member / Участник проекта
@@ -65,6 +77,10 @@ class ProjectMember(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     role = db.Column(db.String(100), default='Участник')
     joined_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
+
+    # Relationships
+    project = db.relationship('Project', back_populates='members')
+    user = db.relationship('User', back_populates='project_memberships')
 
 
 # Tasks / Задачи
@@ -79,9 +95,11 @@ class Task(db.Model):
     status = db.Column(db.String(20), default='todo')  # todo, in_progress, done
     created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    project = db.relationship('Project', backref='tasks', lazy=True)
-    assignee = db.relationship('User', foreign_keys=[assigned_to], lazy=True)
-    creator = db.relationship('User', foreign_keys=[created_by], lazy=True)
+
+    # Relationships
+    project = db.relationship('Project', back_populates='tasks')
+    assignee = db.relationship('User', foreign_keys=[assigned_to], back_populates='assigned_tasks')
+    creator = db.relationship('User', foreign_keys=[created_by], back_populates='created_tasks')
 
 
 # Events / События
@@ -95,8 +113,39 @@ class Event(db.Model):
     location = db.Column(db.String(200))
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
-    project = db.relationship('Project', backref='events', lazy=True)
-    creator = db.relationship('User', foreign_keys=[created_by], lazy=True)
+
+    # Relationships
+    project = db.relationship('Project', back_populates='events')
+    creator = db.relationship('User', back_populates='created_events')
+
+
+# Join Request / Запрос на присоединение
+class JoinRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    message = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
+
+    # Relationships
+    project = db.relationship('Project', back_populates='join_requests')
+    user = db.relationship('User', back_populates='join_requests')
+
+
+# Notification / Уведомление
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text)
+    type = db.Column(db.String(50), nullable=False)  # join_request, join_result, etc.
+    related_id = db.Column(db.Integer)  # ID связанного объекта (join_request, project, etc.)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone(timedelta(hours=3))))
+
+    # Relationships
+    user = db.relationship('User', back_populates='notifications')
 
 
 @login_manager.user_loader
