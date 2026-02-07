@@ -1,77 +1,119 @@
-<!DOCTYPE html>f
+<!DOCTYPE html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TeamEasy</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-<nav class="sidebar">
-    <div class="logo">
-        <a href="{{ url_for('index') }}" style="text-decoration: none; color: inherit;">
-            <h1>TeamEasy</h1>
-        </a>
-    </div>
-    <div class="nav-links">
-        <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-            <span>Главная</span>
-        </a>
-
-        <a href="{{ url_for('search_projects') }}"
-           class="nav-link {% if request.endpoint == 'search_projects' %}active{% endif %}">
-            <span>Поиск</span>
-        </a>
-
-        <a href="{{ url_for('my_projects') }}"
-           class="nav-link {% if request.endpoint == 'my_projects' %}active{% endif %}">
-            <span>Мои проекты</span>
-        </a>
-
-        <a href="{{ url_for('create_project') }}"
-           class="nav-link {% if request.endpoint == 'create_project' %}active{% endif %}">
-            <span>Создать проект</span>
-        </a>
-
-        <a href="{{ url_for('notifications') }}"
-           class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}">
-            <span>Уведомления</span>
-        </a>
-
-        <a href="{{ url_for('profile', username=current_user.username) }}"
-           class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
-            <span>Профиль</span>
-        </a>
-    </div>
-
-    <div style="padding: 0 1rem; margin-top: auto;">
-        <a href="{{ url_for('logout') }}" class="nav-link" style="color: #dc3545;">
-            <span>Выйти</span>
-        </a>
-    </div>
-</nav>
-
-<main class="main-content">
-    <header class="top-bar">
-        <div class="search-bar">
-            <form method="GET" action="{{ url_for('search_projects') }}" style="display: flex; width: 100%;">
-                <input type="text" name="q" placeholder="Поиск проектов и пользователей"
-                       value="{{ request.args.get('q', '') }}" style="flex: 1;">
-            </form>
+    <!-- Десктопное меню -->
+    <nav class="sidebar">
+        <div class="logo">
+            <a href="{{ url_for('index') }}" style="text-decoration: none; color: inherit;">
+                <h1>TeamEasy</h1>
+            </a>
         </div>
-    </header>
-    <div class="content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+        <div class="nav-links">
+            <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+                <span>Главная</span>
+            </a>
 
-        {% block content %}{% endblock %}
-    </div>
-</main>
+            <a href="{{ url_for('search_projects') }}"
+               class="nav-link {% if request.endpoint == 'search_projects' %}active{% endif %}">
+                <span>Поиск</span>
+            </a>
+
+            <a href="{{ url_for('my_projects') }}"
+               class="nav-link {% if request.endpoint == 'my_projects' %}active{% endif %}">
+                <span>Мои проекты</span>
+            </a>
+
+            <a href="{{ url_for('create_project') }}"
+               class="nav-link {% if request.endpoint == 'create_project' %}active{% endif %}">
+                <span>Создать проект</span>
+            </a>
+
+            <a href="{{ url_for('notifications') }}"
+               class="nav-link {% if request.endpoint == 'notifications' %}active{% endif %}">
+                <span>Уведомления</span>
+            </a>
+
+            <a href="{{ url_for('profile', username=current_user.username) }}"
+               class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
+                <span>Профиль</span>
+            </a>
+        </div>
+
+        <div style="padding: 0 1rem; margin-top: auto;">
+            <a href="{{ url_for('logout') }}" class="nav-link" style="color: #dc3545;">
+                <span>Выйти</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Мобильное нижнее меню -->
+    <nav class="mobile-bottom-nav">
+        <div class="nav-items">
+            <a href="{{ url_for('home') }}" class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </a>
+
+            <a href="{{ url_for('search_projects') }}"
+               class="nav-item {% if request.endpoint == 'search_projects' %}active{% endif %}">
+                <i class="fas fa-search"></i>
+                <span>Поиск</span>
+            </a>
+
+            <a href="{{ url_for('create_project') }}"
+               class="nav-item {% if request.endpoint == 'create_project' %}active{% endif %}">
+                <i class="fas fa-plus"></i>
+                <span>Создать</span>
+            </a>
+
+            <a href="{{ url_for('notifications') }}"
+               class="nav-item {% if request.endpoint == 'notifications' %}active{% endif %}">
+                <i class="fas fa-bell"></i>
+                <span>Уведом.</span>
+            </a>
+
+            <a href="{{ url_for('profile', username=current_user.username) }}"
+               class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+                <i class="fas fa-user"></i>
+                <span>Профиль</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="search-bar">
+                <form method="GET" action="{{ url_for('search_projects') }}" style="display: flex; width: 100%;">
+                    <input type="text" name="q" placeholder="Поиск проектов"
+                           value="{{ request.args.get('q', '') }}" style="flex: 1;">
+                </form>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">
+                    {{ current_user.username[0].upper() if current_user.is_authenticated else '?' }}
+                </div>
+            </div>
+        </header>
+        <div class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 </body>
 </html>
