@@ -8,6 +8,8 @@
 # Imports of libraries / Импорты библиотек
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from models import db, User, Project, ProjectMember, login_manager, Task, Event, allowed_file, MAX_FILE_SIZE, JoinRequest, Notification
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -45,6 +47,17 @@ CATEGORIES = {
     "other": "Другое"
 }
 
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    flash("Слишком много запросов! Пожалуйста, подождите немного.", "error")
+    return redirect(url_for('login'))
 
 @app.context_processor
 def inject_categories():
@@ -112,6 +125,7 @@ def register():
 
 # Login / Вход
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per 15 minutes; 10 per hour", methods=["POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -1090,4 +1104,4 @@ def clear_notifications():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0',debug=True, port=5000)
+    app.run(host='0.0.0.0',debug=True, port=4000)
